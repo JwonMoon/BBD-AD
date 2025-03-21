@@ -1,0 +1,63 @@
+<!-- 200m route / no wind, rain / sunny -->
+<route id="26990" road_id="18" town="Town03">
+      <waypoints>
+         <position x="83.8" y="-93.5" z="8.0" />
+         <position x="83.8" y="-95.5" z="8.0" /> <!-- 1m -->
+         <position x="83.9" y="-97.5" z="8.0" />
+         <position x="84.0" y="-99.5" z="8.0" />
+         <position x="84.1" y="-101.5" z="8.0" />
+         <position x="84.1" y="-103.5" z="8.0" />
+         <position x="84.2" y="-105.5" z="8.0" />
+         <position x="84.3" y="-107.5" z="8.0" />
+         <position x="84.3" y="-109.5" z="8.0" />
+         <position x="84.4" y="-111.5" z="8.0" />
+         <position x="84.5" y="-113.5" z="8.0" />
+         <position x="84.5" y="-115.5" z="8.0" />
+         <position x="64.3" y="-136.9" z="7.5" />
+         <position x="62.3" y="-136.9" z="7.2" />
+         <position x="60.3" y="-137.0" z="6.9" />
+         <position x="58.3" y="-137.0" z="6.6" />
+         <position x="56.3" y="-137.1" z="6.2" />
+         <position x="54.3" y="-137.1" z="5.8" />
+         <position x="52.3" y="-137.2" z="5.4" />
+         <position x="50.3" y="-137.2" z="4.9" />
+         <position x="48.3" y="-137.2" z="4.5" />
+         <position x="46.3" y="-137.3" z="4.0" />
+         <position x="44.3" y="-137.3" z="3.6" />
+         <position x="42.3" y="-137.4" z="3.2" />
+         <position x="40.3" y="-137.4" z="2.8" />
+         <position x="38.3" y="-137.5" z="2.3" />
+         <position x="36.3" y="-137.5" z="2.0" />
+         <position x="34.3" y="-137.6" z="1.6" />
+         <position x="32.3" y="-137.6" z="1.2" />
+         <position x="30.3" y="-137.7" z="0.8" />
+         <position x="28.3" y="-137.7" z="0.4" />
+         <position x="26.3" y="-137.8" z="0.0" />
+         <position x="24.3" y="-137.9" z="-0.4" />
+         <position x="22.3" y="-138.0" z="-0.8" />
+         <position x="20.3" y="-138.1" z="-1.2" />
+         <position x="18.3" y="-138.2" z="-1.6" />
+         <position x="16.3" y="-138.3" z="-2.0" />
+         <position x="14.3" y="-138.4" z="-2.4" />
+         <position x="12.3" y="-138.5" z="-2.8" />
+         <position x="10.3" y="-138.6" z="-3.2" />
+         <position x="8.3" y="-138.7" z="-3.6" />
+         <position x="6.3" y="-138.8" z="-4.0" />
+         <position x="4.3" y="-138.9" z="-4.4" />
+         <position x="2.3" y="-139.0" z="-4.8" />
+         <position x="0.3" y="-139.1" z="-5.2" />
+      </waypoints>
+      <scenarios>
+         <scenario name="MySimpleDrive_1" type="MySimpleDrive">
+            <!-- <trigger_point x="83.9" y="-97.5" yaw="272.0" z="8.0" /> -->
+            <trigger_point x="83.8" y="-93.5" yaw="272.0" z="8.0" />
+            <speed value="20" /> <!-- m/s -->
+            <drive_distance value="1" /> <!-- m -->
+            <source_dist_interval from="22" to="30" />
+         </scenario>
+      </scenarios>
+      <weathers>
+         <weather cloudiness="10.0" fog_density="0.0" precipitation="0.0" precipitation_deposits="0.0" route_percentage="0" sun_altitude_angle="50.0" sun_azimuth_angle="45.0" wetness="0.0" wind_intensity="5.0" />
+         <weather cloudiness="10.0" fog_density="0.0" precipitation="0.0" precipitation_deposits="0.0" route_percentage="100" sun_altitude_angle="50.0" sun_azimuth_angle="45.0" wetness="0.0" wind_intensity="5.0" />
+      </weathers>
+   </route>
