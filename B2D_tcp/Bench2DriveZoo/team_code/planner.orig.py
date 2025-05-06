@@ -40,6 +40,8 @@ class Plotter(object):
 
 class RoutePlanner(object):
 	def __init__(self, min_distance, max_distance, debug_size=256, lat_ref=42.0, lon_ref=2.0):
+		print("planner init original")
+
 		self.route = deque()
 		self.min_distance = min_distance
 		self.max_distance = max_distance

@@ -65,11 +65,13 @@ class AgentWrapperFactory(object):
 
     @staticmethod
     def get_wrapper(agent):
-        if isinstance(agent, ROSBaseAgent):
-            return ROSAgentWrapper(agent)
-        else:
-            return AgentWrapper(agent)
-
+        return AgentWrapper(agent) #jw
+    
+    # def get_wrapper(agent):
+    #     if isinstance(agent, ROSBaseAgent):
+    #         return ROSAgentWrapper(agent)
+    #     else:
+            # return AgentWrapper(agent)
 
 def validate_sensor_configuration(sensors, agent_track, selected_track):
     """
@@ -235,6 +237,37 @@ class AgentWrapper(object):
 
         return type_, id_, sensor_transform, attributes
 
+    # def setup_sensors(self, vehicle):
+    #     """
+    #     Create the sensors defined by the user and attach them to the ego-vehicle
+    #     :param vehicle: ego vehicle
+    #     :return:
+    #     """
+    #     world = CarlaDataProvider.get_world()
+    #     bp_library = world.get_blueprint_library()
+    #     for sensor_spec in self._agent.sensors():
+    #         type_, id_, sensor_transform, attributes = self._preprocess_sensor_spec(sensor_spec)
+
+    #         # These are the pseudosensors (not spawned)
+    #         if type_ == 'sensor.opendrive_map':
+    #             sensor = OpenDriveMapReader(vehicle, attributes['reading_frequency'])
+    #         elif type_ == 'sensor.speedometer':
+    #             sensor = SpeedometerReader(vehicle, attributes['reading_frequency'])
+
+    #         # These are the sensors spawned on the carla world
+    #         else:
+    #             bp = bp_library.find(type_)
+    #             for key, value in attributes.items():
+    #                 bp.set_attribute(str(key), str(value))
+    #             sensor = CarlaDataProvider.get_world().spawn_actor(bp, sensor_transform, vehicle)
+
+    #         # setup callback
+    #         sensor.listen(CallBack(id_, type_, sensor, self._agent.sensor_interface))
+    #         self._sensors_list.append(sensor)
+
+    #     # Some sensors miss sending data during the first ticks, so tick several times and remove the data
+    #     for _ in range(10):
+    #         world.tick()
     def setup_sensors(self, vehicle):
         """
         Create the sensors defined by the user and attach them to the ego-vehicle
@@ -243,9 +276,12 @@ class AgentWrapper(object):
         """
         world = CarlaDataProvider.get_world()
         bp_library = world.get_blueprint_library()
+        num = 1
         for sensor_spec in self._agent.sensors():
+            # print(f"Sensor {num}: type={sensor_spec['type']}, id={sensor_spec['id']}")
             type_, id_, sensor_transform, attributes = self._preprocess_sensor_spec(sensor_spec)
-
+            # print(f"Spawning: type={type_}, id={id_}, attributes={attributes}")
+            num += 1
             # These are the pseudosensors (not spawned)
             if type_ == 'sensor.opendrive_map':
                 sensor = OpenDriveMapReader(vehicle, attributes['reading_frequency'])
@@ -255,6 +291,7 @@ class AgentWrapper(object):
             # These are the sensors spawned on the carla world
             else:
                 bp = bp_library.find(type_)
+                bp.set_attribute('role_name', sensor_spec['id'])  # jw) essential !!
                 for key, value in attributes.items():
                     bp.set_attribute(str(key), str(value))
                 sensor = CarlaDataProvider.get_world().spawn_actor(bp, sensor_transform, vehicle)
@@ -262,6 +299,7 @@ class AgentWrapper(object):
             # setup callback
             sensor.listen(CallBack(id_, type_, sensor, self._agent.sensor_interface))
             self._sensors_list.append(sensor)
+            # print(f"Spawned sensor: type={type_}, id={id_}")
 
         # Some sensors miss sending data during the first ticks, so tick several times and remove the data
         for _ in range(10):
@@ -303,13 +341,35 @@ class ROSAgentWrapper(AgentWrapper):
         :param vehicle: ego vehicle
         :return:
         """
-        for sensor_spec in self._agent.sensors():
-            type_, id_, transform, attributes = self._preprocess_sensor_spec(sensor_spec)
-            uid = self._agent.spawn_object(type_, id_, transform, attributes, attach_to=vehicle.id)
-            self._sensors_list.append(uid)
+        # for sensor_spec in self._agent.sensors():
+        #     type_, id_, transform, attributes = self._preprocess_sensor_spec(sensor_spec)
+        #     uid = self._agent.spawn_object(type_, id_, transform, attributes, attach_to=vehicle.id)
+        #     self._sensors_list.append(uid)
 
-        # Tick once to spawn the sensors
-        CarlaDataProvider.get_world().tick()
+        # # Tick once to spawn the sensors
+        # CarlaDataProvider.get_world().tick()
+        
+        #jw) debug
+        num = 1
+        sensor_list = self._agent.sensors()
+        print(f"Total sensors: {len(sensor_list)}")
+        for sensor_spec in sensor_list:
+            print(f"Sensor {num}: type={sensor_spec['type']}, id={sensor_spec['id']}")
+            num += 1
+            type_, id_, transform, attributes = self._preprocess_sensor_spec(sensor_spec)
+            print(f"Spawning: type={type_}, id={id_}, attributes={attributes}")
+            try:
+                uid = self._agent.spawn_object(type_, id_, transform, attributes, attach_to=vehicle.id)
+                print(f"Spawned sensor: type={type_}, id={id_}, uid={uid}")
+                self._sensors_list.append(uid)
+            except Exception as e:
+                self.get_logger().error(f"Failed to spawn sensor {type_} id={id_}: {str(e)}")
+        try:
+            print("Ticking world to spawn sensors")
+            CarlaDataProvider.get_world().tick()
+            print("World tick completed")
+        except Exception as e:
+            self.get_logger().error(f"World tick failed: {str(e)}")
 
     def cleanup(self):
         for uid in self._sensors_list:

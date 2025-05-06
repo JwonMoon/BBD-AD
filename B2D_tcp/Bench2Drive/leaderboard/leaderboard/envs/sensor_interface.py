@@ -221,20 +221,41 @@ class SensorInterface(object):
 
     def get_data(self, frame):
         """Read the queue to get the sensors data"""
+        print("get_data debug #1")
+
         try:
+            print("get_data debug #2")
+
             data_dict = {}
+            print("get_data debug #3")
+
             while len(data_dict.keys()) < len(self._sensors_objects.keys()):
+                print(f"len(data_dict.keys()): {len(data_dict.keys())}")
+                print(f"len(self._sensors_objects.keys()): {len(self._sensors_objects.keys())}")
+                print("get_data debug #4")
+
                 # Don't wait for the opendrive sensor
                 if self._opendrive_tag and self._opendrive_tag not in data_dict.keys() \
                         and len(self._sensors_objects.keys()) == len(data_dict.keys()) + 1:
+                    print(f"self._opendrive_tag: {self._opendrive_tag}")
+                    print(f"self._opendrive_tag not in data_dict.keys(): {self._opendrive_tag not in data_dict.keys()}")
+                    print("get_data debug #5")                    
                     break
-
+                print("get_data debug #6")
                 sensor_data = self._data_buffers.get(True, self._queue_timeout)
+                print(f"sensor_data: {sensor_data}")
+                print("get_data debug #7")
+
                 if sensor_data[1] != frame:
+                    print("get_data debug #8")
                     continue
+                print("get_data debug #9")
+
                 data_dict[sensor_data[0]] = ((sensor_data[1], sensor_data[2]))
+                print("get_data debug #10")
 
         except Empty:
             raise SensorReceivedNoData("A sensor took too long to send their data")
+        print("get_data debug #11")
 
         return data_dict
