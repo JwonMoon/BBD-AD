@@ -144,9 +144,9 @@ class EvaluatorAgent(Node, ROSBaseAgent):
 					'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
 					# 'width': 1600, 'height': 900, 'fov': 70,
 					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
-					'width': 1280, 'height': 720, 'fov': 70, #0.8
+					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
 					# 'width': 1024, 'height': 576, 'fov': 70,
-					# 'width': 800, 'height': 450, 'fov': 70,
+					'width': 800, 'height': 450, 'fov': 70, #0.5
 					'id': 'CAM_FRONT'
 					},
 				{
@@ -155,9 +155,9 @@ class EvaluatorAgent(Node, ROSBaseAgent):
 					'roll': 0.0, 'pitch': 0.0, 'yaw': -55.0,
 					# 'width': 1600, 'height': 900, 'fov': 70,
 					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
-					'width': 1280, 'height': 720, 'fov': 70, #0.8
+					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
 					# 'width': 1024, 'height': 576, 'fov': 70,
-					# 'width': 800, 'height': 450, 'fov': 70,
+					'width': 800, 'height': 450, 'fov': 70, #0.5
 					'id': 'CAM_FRONT_LEFT'
 					},
 				{
@@ -166,9 +166,9 @@ class EvaluatorAgent(Node, ROSBaseAgent):
 					'roll': 0.0, 'pitch': 0.0, 'yaw': 55.0,
 					# 'width': 1600, 'height': 900, 'fov': 70,
 					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
-					'width': 1280, 'height': 720, 'fov': 70, #0.8
+					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
 					# 'width': 1024, 'height': 576, 'fov': 70,
-					# 'width': 800, 'height': 450, 'fov': 70,
+					'width': 800, 'height': 450, 'fov': 70, #0.5
 					'id': 'CAM_FRONT_RIGHT'
 					}]
 				# # imu

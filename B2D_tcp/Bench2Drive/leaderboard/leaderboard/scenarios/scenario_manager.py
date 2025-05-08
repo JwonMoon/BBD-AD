@@ -18,6 +18,8 @@ import time
 import py_trees
 import carla
 import threading
+import os
+import csv
 
 from srunner.scenariomanager.carla_data_provider import CarlaDataProvider
 from srunner.scenariomanager.timer import GameTime
@@ -167,7 +169,26 @@ class ScenarioManager(object):
         print("[scenario_manager] 1. _tick_scenario() called")
         if self._running and self.get_running_status():
             print(f"CarlaDataProvider.get_world().tick(self._timeout)")
+            # CarlaDataProvider.get_world().tick(self._timeout)
+            
+            #jw) debug
+            start_time = time.time()
             CarlaDataProvider.get_world().tick(self._timeout)
+            end_time = time.time()
+
+            duration = end_time - start_time
+            print(f"[TICK-TIME] Carla tick() took {duration:.4f} seconds")
+            
+            #jw) debug
+            # CSV 저장 경로 설정
+            csv_path = "/root/shared_dir/B2D_Demo/jw_ws/tick_time/tick_times.csv"
+            # CSV 파일에 기록
+            write_header = not os.path.exists(csv_path)
+            with open(csv_path, mode='a', newline='') as f:
+                writer = csv.writer(f)
+                if write_header:
+                    writer.writerow(['timestamp', 'tick_duration_sec'])
+                writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), f"{duration:.6f}"])
 
         print("[scenario_manager] 2. carla get snapshot()")
         timestamp = CarlaDataProvider.get_world().get_snapshot().timestamp

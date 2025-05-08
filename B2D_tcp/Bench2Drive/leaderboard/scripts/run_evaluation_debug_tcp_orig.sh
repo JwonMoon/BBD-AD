@@ -1,8 +1,7 @@
 #!/bin/bash
 
 export PYTHONPATH=$PYTHONPATH:~/shared_dir/B2D_Demo/B2D_tcp/Bench2Drive/Bench2DriveZoo #jw) TCP import error
-# BASE_PORT=10000 #inwoong
-BASE_PORT=2000 #localhost
+BASE_PORT=10000 
 BASE_TM_PORT=50000
 IS_BENCH2DRIVE=True
 BASE_ROUTES=leaderboard/data/my_routes_highway_26406_40pts

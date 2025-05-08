@@ -243,7 +243,7 @@ class SensorInterface(object):
                     break
                 print("get_data debug #6")
                 sensor_data = self._data_buffers.get(True, self._queue_timeout)
-                print(f"sensor_data: {sensor_data}")
+                # print(f"sensor_data: {sensor_data}")
                 print("get_data debug #7")
 
                 if sensor_data[1] != frame:
