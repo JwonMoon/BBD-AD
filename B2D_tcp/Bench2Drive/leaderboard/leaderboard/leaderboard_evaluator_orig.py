@@ -408,6 +408,7 @@ class LeaderboardEvaluator(object):
             if args.record:
                 self.client.start_recorder("{}/{}_rep{}.log".format(args.record, config.name, config.repetition_index))
             self.manager.load_scenario(self.route_scenario, self.agent_instance, config.index, config.repetition_index)
+            CarlaDataProvider.get_world().tick()
             self.manager.tick_count = 0
             self.manager.run_scenario()
 

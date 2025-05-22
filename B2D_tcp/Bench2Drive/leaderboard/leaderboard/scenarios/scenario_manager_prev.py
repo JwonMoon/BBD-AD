@@ -29,14 +29,7 @@ from leaderboard.autoagents.agent_wrapper import AgentWrapperFactory, AgentError
 from leaderboard.envs.sensor_interface import SensorReceivedNoData
 from leaderboard.utils.result_writer import ResultOutputProvider
 
-#jw) to ROS node
-import rclpy
-from rclpy.node import Node
-from rclpy.qos import QoSProfile
-from carla_msgs.msg import CarlaEgoVehicleControl
 
-#jw) to ROS node
-# class ScenarioManager(Node):
 class ScenarioManager(object):
 
     """
@@ -58,10 +51,6 @@ class ScenarioManager(object):
         """
         Setups up the parameters, which will be filled at load_scenario()
         """
-        #jw) to ROS node
-        # rclpy.init(args=None)
-        # super().__init__('scenario_manager_node')
-
         self.route_index = None
         self.scenario = None
         self.scenario_tree = None
@@ -89,14 +78,6 @@ class ScenarioManager(object):
 
         self.tick_count = 0
 
-        #jw) to ROS node
-        # self._control_sub = self.create_subscription(
-        #     CarlaEgoVehicleControl,
-        #     '/carla/hero/vehicle_control_cmd',
-        #     self._control_callback,
-        #     QoSProfile(depth=1)
-        # )
-
         # Use the callback_id inside the signal handler to allow external interrupts
         signal.signal(signal.SIGINT, self.signal_handler)
 
@@ -109,14 +90,6 @@ class ScenarioManager(object):
         elif self._watchdog and not self._watchdog.get_status():
             raise RuntimeError("The simulation took longer than {}s to update".format(self._timeout))
         self._running = False
-
-    # jw) to ROS node
-    # def _control_callback(self, msg):
-    #     if self._running:
-    #         try:
-    #             self._tick_scenario()
-    #         except Exception as e:
-    #             self.get_logger().error(f"[ScenarioManager ROS2] tick exception: {str(e)}")
 
     def cleanup(self):
         """
@@ -164,7 +137,7 @@ class ScenarioManager(object):
             self.scenario.build_scenarios(self.ego_vehicles[0], debug=debug)
             # self.scenario.spawn_parked_vehicles(self.ego_vehicles[0]) #jw
             time.sleep(1)
-        
+
     def run_scenario(self):
         """
         Trigger the start of the scenario and wait for it to finish/fail
@@ -186,20 +159,8 @@ class ScenarioManager(object):
         self._scenario_thread = threading.Thread(target=self.build_scenarios_loop, args=(self._debug_mode > 0, ))
         self._scenario_thread.start()
 
-        # while self._running:
-        #     self._tick_scenario()
-        while True:
-            if not self._running:
-                print("[ScenarioManager] self._running == False !!")
-                return
+        while self._running:
             self._tick_scenario()
-            
-        #jw) to ROS node
-        # try:
-        #     while self._running:
-        #         time.sleep(0.001)
-        # except KeyboardInterrupt:
-        #     self._running = False
 
     def _tick_scenario(self):
         """
@@ -210,7 +171,7 @@ class ScenarioManager(object):
             # CarlaDataProvider.get_world().tick(self._timeout)
             
             #jw) debug
-            print(f"CarlaDataProvider.get_world().tick(self._timeout)")
+            # print(f"CarlaDataProvider.get_world().tick(self._timeout)")
             start_time = time.time()
             CarlaDataProvider.get_world().tick(self._timeout)
             end_time = time.time()
@@ -286,14 +247,13 @@ class ScenarioManager(object):
 
             if self._debug_mode > 2:
                 print("\n")
-                print("[Tree Debug] scenario_tree status:", self.scenario_tree.status)
                 py_trees.display.print_ascii_tree(self.scenario_tree, show_status=True)
                 sys.stdout.flush()
 
             if self.scenario_tree.status != py_trees.common.Status.RUNNING:
                 self._running = False
-                print(f"self.scenario_tree.status = {self.scenario_tree.status}")
-                print("@@@@ self._running = False @@@@")
+                # print(f"self.scenario_tree.status = {self.scenario_tree.status}")
+                # print("@@@@ self._running = False @@@@")
 
             ego_trans = self.ego_vehicles[0].get_transform()
             self._spectator.set_transform(carla.Transform(ego_trans.location + carla.Location(z=70),
@@ -332,9 +292,6 @@ class ScenarioManager(object):
 
         # Make sure the scenario thread finishes to avoid blocks
         self._running = False
-        print(f"self.scenario_tree.status = {self.scenario_tree.status}")
-        print("@@@@ self._running = False @@@@")
-
         if self._scenario_thread is not None: # jw
             self._scenario_thread.join()
             self._scenario_thread = None
