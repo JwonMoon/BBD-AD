@@ -1,0 +1,8 @@
+*.zip
+*.mp4
+*/Bench2Drive/eval_v1
+*/Bench2Drive/leaderboard/docs
+jw_ws/*
+*.pyc
+*/__pycache__/
+~               
