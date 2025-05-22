@@ -389,7 +389,7 @@ class RouteScenario(BasicScenario):
                                                 policy=py_trees.common.ParallelPolicy.SUCCESS_ON_ALL)
 
         self.behavior_node = behavior
-        # scenario_behaviors = [] #jw
+        scenario_behaviors = []
         blackboard_list = []
 
         # Add the behavior that manages the scenario trigger conditions
@@ -401,9 +401,9 @@ class RouteScenario(BasicScenario):
         self.scenario_triggerer = scenario_triggerer
 
         # Add the Background Activity
-        # behavior.add_child(BackgroundBehavior(self.ego_vehicles[0], self.route, name="BackgroundActivity")) #jw
+        behavior.add_child(BackgroundBehavior(self.ego_vehicles[0], self.route, name="BackgroundActivity"))
 
-        # behavior.add_children(scenario_behaviors) #jw
+        behavior.add_children(scenario_behaviors)
         return behavior
 
     def _create_test_criteria(self):

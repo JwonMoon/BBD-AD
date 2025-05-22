@@ -3,22 +3,22 @@
     <Domain Id="any">
         <General>
             <Interfaces>
-                <NetworkInterface name="enx1c860b2269c5" priority="default" multicast="default" />
+                <NetworkInterface name="enx1c860b226ad6" priority="default" multicast="default" />
             </Interfaces>
             <AllowMulticast>default</AllowMulticast>
-	    <MaxMessageSize>65500B</MaxMessageSize>
+            <MaxMessageSize>65500B</MaxMessageSize>
         </General>
         <Internal>
             <SocketReceiveBufferSize min="10MB"/>
             <Watermarks>
                 <WhcHigh>500kB</WhcHigh>
             </Watermarks>
-   	 </Internal>
-	 <Discovery>
-	    <Peers>
-	        <!-- Multicast 사용을 줄이고 Peer 직접 지정 (성능 안정에 유리) -->
-                <Peer address="192.168.1.5"/>
-	    </Peers>
-	 </Discovery>
+    	</Internal>
+	<Discovery>
+            <Peers>
+                <!-- Desktop의 CycloneDDS가 사용하는 ROS 전용 IP -->
+                <Peer address="192.168.1.4"/>
+            </Peers>
+        </Discovery>
     </Domain>
 </CycloneDDS>

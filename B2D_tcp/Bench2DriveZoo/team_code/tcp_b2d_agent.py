@@ -22,14 +22,19 @@ from TCP.config import GlobalConfig
 from team_code.planner import RoutePlanner
 from scipy.optimize import fsolve
 
+
 SAVE_PATH = os.environ.get('SAVE_PATH', None)
 IS_BENCH2DRIVE = os.environ.get('IS_BENCH2DRIVE', None)
 PLANNER_TYPE = os.environ.get('PLANNER_TYPE', None)
+print('*'*10)
+print(PLANNER_TYPE)
+print('*'*10)
 
 EARTH_RADIUS_EQUA = 6378137.0
 
 def get_entry_point():
 	return 'TCPAgent'
+
 
 class TCPAgent(autonomous_agent.AutonomousAgent):
 	def setup(self, path_to_conf_file):
@@ -70,15 +75,6 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 		self._im_transform = T.Compose([T.ToTensor(), T.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])])
 
 		self.last_steers = deque()
-
-		# jw: 속도와 거리 기록용 변수
-		self.prev_location = None
-		self.total_distance = 0.0
-		self.speed_log = []
-		self.distance_log = []
-		self.inference_times = []
-		self.fps_log = []
-
 		# self.lat_ref, self.lon_ref = 42.0, 2.0
 		if SAVE_PATH is not None:
 			now = datetime.datetime.now()
@@ -206,7 +202,7 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 		
 		bev = cv2.cvtColor(input_data['bev'][1][:, :, :3], cv2.COLOR_BGR2RGB)
 		gps = input_data['GPS'][1][:2]
-		speed = input_data['SPEED'][1]['speed']	# jw: 실시간 속도 (m/s)
+		speed = input_data['SPEED'][1]['speed']
 		compass = input_data['IMU'][1][-1]
 
 		if (math.isnan(compass) == True): #It can happen that the compass sends nan for a few frames
@@ -240,9 +236,6 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 	def run_step(self, input_data, timestamp):
 		if not self.initialized:
 			self._init()
-		
-		start_time = time.time()  # jw: FPS와 추론 시간 측정 시작
-
 		tick_data = self.tick(input_data)
 		if self.step < self.config.seq_len:
 			rgb = self._im_transform(tick_data['rgb']).unsqueeze(0)
@@ -253,20 +246,6 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 			control.brake = 0.0
 			
 			return control
-
-		# jw: 실시간 속도 기록 (m/s → km/h)
-		speed_kmh = tick_data['speed'] * 3.6
-		self.speed_log.append(speed_kmh)
-
-		#jw: 이동 거리 계산
-		current_location = self._vehicle.get_location() if hasattr(self, '_vehicle') else None
-		if current_location and self.prev_location:
-			# distance_increment = current_location.distance(self.prev_location) 
-			distance_increment = current_location.distance(self.prev_location) * 100000
-			print(f"distance_increment * 100000: {distance_increment*100000:.5f} ms") ##jw debug
-			self.total_distance += distance_increment
-			self.distance_log.append(self.total_distance)
-		self.prev_location = current_location
 
 		gt_velocity = torch.FloatTensor([tick_data['speed']]).to('cuda', dtype=torch.float32)
 		command = tick_data['next_command']
@@ -286,14 +265,7 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 		target_point = torch.stack(tick_data['target_point'], dim=1).to('cuda', dtype=torch.float32)
 		state = torch.cat([speed, target_point, cmd_one_hot], 1)
 
-		# jw: 모델 추론 시작
-		inference_start = time.time()
-		pred = self.net(rgb, state, target_point)
-		inference_end = time.time()
-		inference_time = inference_end - inference_start
-		self.inference_times.append(inference_time)
-
-		# pred= self.net(rgb, state, target_point) # orig
+		pred= self.net(rgb, state, target_point)
 
 		steer_ctrl, throttle_ctrl, brake_ctrl, metadata = self.net.process_action(pred, tick_data['next_command'], gt_velocity, target_point)
 
@@ -359,28 +331,10 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 		self.pid_metadata['steer'] = control.steer
 		self.pid_metadata['throttle'] = control.throttle
 		self.pid_metadata['brake'] = control.brake
-
-		# jw: FPS 계산
-		end_time = time.time()
-		frame_time = end_time - start_time
-		fps = 1.0 / frame_time if frame_time > 0 else 0
-		self.fps_log.append(fps)
-		
 		metric_info = self.get_metric_info()
-
-		# jw:
-		metric_info.update({
-			'speed_kmh': speed_kmh,
-			'total_distance_m': self.total_distance,
-			'inference_time_ms': inference_time * 1000,
-			'fps': fps
-		})
-		
 		self.metric_info[self.step] = metric_info
-
 		if SAVE_PATH is not None and self.step % 1 == 0:
 			self.save(tick_data)
-
 		return control
 
 	def save(self, tick_data):
@@ -402,14 +356,6 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 		outfile.close()
 
 	def destroy(self):
-		# 최종 결과 출력
-		if self.inference_times:
-			avg_inference_time = sum(self.inference_times) / len(self.inference_times)
-			avg_fps = sum(self.fps_log) / len(self.fps_log)
-			print(f"Average Inference Time: {avg_inference_time*1000:.2f} ms")
-			print(f"Average FPS: {avg_fps:.2f}")
-			print(f"Final Total Distance: {self.total_distance:.2f} m")
-
 		del self.net
 		torch.cuda.empty_cache()
 

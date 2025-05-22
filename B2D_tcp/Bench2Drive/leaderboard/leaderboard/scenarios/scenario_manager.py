@@ -18,8 +18,6 @@ import time
 import py_trees
 import carla
 import threading
-import os
-import csv
 
 from srunner.scenariomanager.carla_data_provider import CarlaDataProvider
 from srunner.scenariomanager.timer import GameTime
@@ -135,7 +133,7 @@ class ScenarioManager(object):
         """
         while self._running:
             self.scenario.build_scenarios(self.ego_vehicles[0], debug=debug)
-            # self.scenario.spawn_parked_vehicles(self.ego_vehicles[0]) #jw
+            self.scenario.spawn_parked_vehicles(self.ego_vehicles[0])
             time.sleep(1)
 
     def run_scenario(self):
@@ -166,31 +164,9 @@ class ScenarioManager(object):
         """
         Run next tick of scenario and the agent and tick the world.
         """
-        print("[scenario_manager] 1. _tick_scenario() called")
         if self._running and self.get_running_status():
-            print(f"CarlaDataProvider.get_world().tick(self._timeout)")
-            # CarlaDataProvider.get_world().tick(self._timeout)
-            
-            #jw) debug
-            start_time = time.time()
             CarlaDataProvider.get_world().tick(self._timeout)
-            end_time = time.time()
 
-            duration = end_time - start_time
-            print(f"[TICK-TIME] Carla tick() took {duration:.4f} seconds")
-            
-            #jw) debug
-            # CSV 저장 경로 설정
-            csv_path = "/root/shared_dir/B2D_Demo/jw_ws/tick_time/tick_times.csv"
-            # CSV 파일에 기록
-            write_header = not os.path.exists(csv_path)
-            with open(csv_path, mode='a', newline='') as f:
-                writer = csv.writer(f)
-                if write_header:
-                    writer.writerow(['timestamp', 'tick_duration_sec'])
-                writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), f"{duration:.6f}"])
-
-        print("[scenario_manager] 2. carla get snapshot()")
         timestamp = CarlaDataProvider.get_world().get_snapshot().timestamp
 
         if self._timestamp_last_run < timestamp.elapsed_seconds and self._running:
@@ -209,7 +185,6 @@ class ScenarioManager(object):
             try:
                 self._agent_watchdog.resume()
                 self._agent_watchdog.update()
-                print("[scenario_manager] 3. get ego_action")
                 ego_action = self._agent_wrapper()
                 self._agent_watchdog.pause()
 
@@ -221,7 +196,6 @@ class ScenarioManager(object):
                 raise AgentError(e)
 
             self._watchdog.resume()
-            print("[scenario_manager] 4. apply control")
             self.ego_vehicles[0].apply_control(ego_action)
 
             # Tick scenario. Add the ego control to the blackboard in case some behaviors want to change it
@@ -252,8 +226,6 @@ class ScenarioManager(object):
 
             if self.scenario_tree.status != py_trees.common.Status.RUNNING:
                 self._running = False
-                # print(f"self.scenario_tree.status = {self.scenario_tree.status}")
-                # print("@@@@ self._running = False @@@@")
 
             ego_trans = self.ego_vehicles[0].get_transform()
             self._spectator.set_transform(carla.Transform(ego_trans.location + carla.Location(z=70),
@@ -292,9 +264,8 @@ class ScenarioManager(object):
 
         # Make sure the scenario thread finishes to avoid blocks
         self._running = False
-        if self._scenario_thread is not None: # jw
-            self._scenario_thread.join()
-            self._scenario_thread = None
+        self._scenario_thread.join()
+        self._scenario_thread = None
 
     def compute_duration_time(self):
         """
