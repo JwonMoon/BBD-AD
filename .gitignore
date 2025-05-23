@@ -1,7 +1,16 @@
 *.zip
 *.mp4
+*/Bench2Drive/assets
+*/Bench2Drive/.gitignore
+*/Bench2Drive/docs
 */Bench2Drive/eval_v1
 */Bench2Drive/leaderboard/docs
+*/Bench2Drive/Bench2DriveZoo
+*/Bench2Drive/LICENSE
+*/Bench2Drive/README.md
+*/Bench2Drive/scenario_runner/
+*/Bench2Drive/tools/
+*/Bench2DriveZoo/
 jw_ws/*
 *.pyc
 */__pycache__/
