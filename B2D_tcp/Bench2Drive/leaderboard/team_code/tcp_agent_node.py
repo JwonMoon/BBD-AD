@@ -170,18 +170,6 @@ class TCPAgentNode(Node):
         # self.get_logger().info(f"[compressed_image_front_right_callback] finished, step {self.step}")
 
     def try_process_step(self):
-        print("-----------------------------------------------")
-        print(f"initialized = {self.initialized}")
-        print(f"rgb_front = {self.rgb_front is not None}")
-        print(f"rgb_front_left = {self.rgb_front_left is not None}")
-        print(f"rgb_front_right = {self.rgb_front_right is not None}")
-        print(f"gps_received = {self.gps_received}")
-        print(f"imu_received = {self.imu_received}")
-        print(f"speed_received = {self.speed_received}")
-        print(f"global_plan_received = {self.global_plan_received}")
-        print(f"global_plan_gps_received = {self.global_plan_gps_received}")
-        print("-----------------------------------------------")
-
         if self.initialized and self.rgb_front is not None and self.rgb_front_left is not None and self.rgb_front_right is not None and self.gps_received and self.imu_received and self.speed_received:
             print(f"let's try process_step(), step {self.step}")
             self.process_step()
@@ -194,13 +182,34 @@ class TCPAgentNode(Node):
             self.imu_received = False
             self.speed_received = False
         else:
+            print("-----------------------------------------------")
             print("too early to do process_step()")
+            if not self.initialized:
+                print(f"initialized = {self.initialized}")
+            if self.rgb_front is None:
+                print(f"rgb_front = {self.rgb_front is not None}")
+            if self.rgb_front_left is None:
+                print(f"rgb_front_left = {self.rgb_front_left is not None}")
+            if self.rgb_front_right is None:
+                print(f"rgb_front_right = {self.rgb_front_right is not None}")
+            if not self.gps_received:
+                print(f"gps_received = {self.gps_received}")
+            if not self.imu_received:
+                print(f"imu_received = {self.imu_received}")
+            if not self.speed_received:
+                print(f"speed_received = {self.speed_received}")
+            if not self.global_plan_received:
+                print(f"global_plan_received = {self.global_plan_received}")
+            if not self.global_plan_gps_received:
+                print(f"global_plan_gps_received = {self.global_plan_gps_received}")
+            print("-----------------------------------------------")
+
 
     def gps_callback(self, msg):
         self.gps = [msg.latitude, msg.longitude]
         self.gps_received = True
         self.try_process_step()
-        self.get_logger().info(f"[gps_callback] lat={msg.latitude}, lon={msg.longitude}") #debug
+        # self.get_logger().info(f"[gps_callback] lat={msg.latitude}, lon={msg.longitude}") #debug
 
     def imu_callback(self, msg):
         # quaternion -> yaw
@@ -224,7 +233,7 @@ class TCPAgentNode(Node):
         self.speed = msg.velocity
         self.speed_received = True
         self.try_process_step()
-        self.get_logger().info(f"[vehicle_status_callback] speed={self.speed}") #debug
+        # self.get_logger().info(f"[vehicle_status_callback] speed={self.speed}") #debug
 
     def global_plan_callback(self, msg):
         self.get_logger().info(f"[global_plan_callback] poses={len(msg.poses)}, road_options={len(msg.road_options)}")
@@ -357,26 +366,29 @@ class TCPAgentNode(Node):
             self.get_logger().warning(f"- process_step(): No tick data or step < seq_len at step {self.step}, retutn control 0")
             rgb = self._im_transform(tick_data['rgb']).unsqueeze(0)
             control = CarlaEgoVehicleControl()
-            control.steer = 0.0
-            control.throttle = 0.0
-            control.brake = 0.0
             self.control_pub.publish(control)
             return
 
+        # time) ROS2 시계 기준 시간 기록
+        ros_time_ns = self.get_clock().now().nanoseconds
+
+        # STEP 0: 전체 시간 측정 시작
+        t0 = time.perf_counter()
+
+        # STEP 1: 이미지 전처리
+        t1 = time.perf_counter()
+        rgb = self._im_transform(tick_data['rgb']).unsqueeze(0).to('cuda', dtype=torch.float32)
+        t2 = time.perf_counter()
+
         gt_velocity = torch.FloatTensor([tick_data['speed']]).to('cuda', dtype=torch.float32)
         command = tick_data['next_command']
-        self.get_logger().warning(f"- process_step(): next_command={command}")
-
-        if command < 0:
-            command = 4
-        command -= 1
+        command = 4 if command < 0 else command - 1
         assert command in [0, 1, 2, 3, 4, 5]
         cmd_one_hot = [0] * 6
         cmd_one_hot[command] = 1
         cmd_one_hot = torch.tensor(cmd_one_hot).view(1, 6).to('cuda', dtype=torch.float32)
-        speed = torch.FloatTensor([float(tick_data['speed'])]).view(1, 1).to('cuda', dtype=torch.float32) / 12
-        rgb = self._im_transform(tick_data['rgb']).unsqueeze(0).to('cuda', dtype=torch.float32)
 
+        speed = torch.FloatTensor([float(tick_data['speed'])]).view(1, 1).to('cuda', dtype=torch.float32) / 12
         tick_data['target_point'] = [
             torch.FloatTensor([tick_data['target_point'][0]]),
             torch.FloatTensor([tick_data['target_point'][1]])
@@ -384,22 +396,25 @@ class TCPAgentNode(Node):
         target_point = torch.stack(tick_data['target_point'], dim=1).to('cuda', dtype=torch.float32)
         state = torch.cat([speed, target_point, cmd_one_hot], 1)
 
-        # jw: 모델 추론 시작
+        # STEP 2: 모델 추론
         self.get_logger().warning(f"- process_step(): net()")
+        t3 = time.perf_counter()
         pred = self.net(rgb, state, target_point)
-        steer_ctrl, throttle_ctrl, brake_ctrl, metadata = self.net.process_action(pred, tick_data['next_command'], gt_velocity, target_point)
-        self.get_logger().warning(f"- process_step(): control_pid()")
-        steer_traj, throttle_traj, brake_traj, metadata_traj = self.net.control_pid(pred['pred_wp'], gt_velocity, target_point)
-        self.get_logger().info(f"gt_velocity: {gt_velocity}")
-        self.get_logger().info(f"target_point: {target_point}")
+        t4 = time.perf_counter()
 
-        # self.get_logger().info(f"state: {state}") #debug
-        self.get_logger().info(f"pred_wp: {pred['pred_wp']}") #debug
-        self.get_logger().info(f"pred_wp.cpu().numpy(): {pred['pred_wp'].cpu().numpy()}")
+        # STEP 3: PID 계산
+        self.get_logger().warning(f"- process_step(): control_pid()")
+        steer_ctrl, throttle_ctrl, brake_ctrl, metadata = self.net.process_action(pred, tick_data['next_command'], gt_velocity, target_point)
+        steer_traj, throttle_traj, brake_traj, metadata_traj = self.net.control_pid(pred['pred_wp'], gt_velocity, target_point)
+        t5 = time.perf_counter()
+        # self.get_logger().info(f"gt_velocity: {gt_velocity}")
+        # self.get_logger().info(f"target_point: {target_point}")
+        # self.get_logger().info(f"pred_wp.cpu().numpy(): {pred['pred_wp'].cpu().numpy()}")
         self.get_logger().info(f"steer_ctrl: {steer_ctrl}, throttle_ctrl: {throttle_ctrl}, brake_ctrl: {brake_ctrl}") #debug
         self.get_logger().info(f"steer_traj: {steer_traj}, throttle_traj: {throttle_traj}, brake_traj: {brake_traj}") #debug
 
-        self.get_logger().warning(f"- process_step(): clipping")
+        # STEP 4: 제어 명령 생성 및 publish
+        self.get_logger().warning(f"- process_step(): generate control")
         control = CarlaEgoVehicleControl()
         if PLANNER_TYPE == 'only_traj':
             self.pid_metadata = metadata_traj
@@ -424,7 +439,7 @@ class TCPAgentNode(Node):
             self.get_logger().warning(f"[debug2] throttle={control.throttle}") #debug
             self.get_logger().warning(f"[debug3] brake={control.brake}") #debug
         
-        #  self.pid_metadata.update({
+        # self.pid_metadata.update({
         #     'steer_ctrl': float(steer_ctrl),
         #     'steer_traj': float(steer_traj),
         #     'throttle_ctrl': float(throttle_ctrl),
@@ -433,6 +448,7 @@ class TCPAgentNode(Node):
         #     'brake_traj': float(brake_traj)
         # })
 
+        self.get_logger().warning(f"- process_step(): clipping")
         if abs(control.steer) > 0.07:   ## In turning
             speed_threshold = 1.0   ## Avoid stuck during turning
         else:
@@ -450,15 +466,40 @@ class TCPAgentNode(Node):
             control.throttle = 0.0
         self.get_logger().warning(f"[debug5] brake={control.brake}") #debug
         
-        self.pid_metadata.update({
-            'steer': control.steer,
-            'throttle': control.throttle,
-            'brake': control.brake
-        })
+        # self.pid_metadata.update({
+        #     'steer': control.steer,
+        #     'throttle': control.throttle,
+        #     'brake': control.brake
+        # })
 
+        self.get_logger().warning(f"- process_step(): control_pub()")
         self.get_logger().warning(f"[PUB CONTROL] steer={control.steer}, throttle={control.throttle}, brake={control.brake}") #debug
         self.control_pub.publish(control)
-        self.get_logger().warning(f"- process_step(): control_pub()")
+        t6 = time.perf_counter()
+
+        # STEP 5: 결과 저장
+        timing = pred.get('timing', {})  # 없을 수도 있으니 안전하게
+        
+        self.pid_metadata = {
+            'step': self.step,
+            'ros_time_ns': ros_time_ns,
+            'image_preprocess_ms': (t2 - t1) * 1000,
+            'model_inference_ms': (t4 - t3) * 1000,
+            'pid_calc_ms': (t5 - t4) * 1000,
+            'publish_ms': (t6 - t5) * 1000,
+            'total_process_step_ms': (t6 - t0) * 1000,
+            'steer_ctrl': float(steer_ctrl),
+            'steer_traj': float(steer_traj),
+            'throttle_ctrl': float(throttle_ctrl),
+            'throttle_traj': float(throttle_traj),
+            'brake_ctrl': float(brake_ctrl),
+            'brake_traj': float(brake_traj),
+            'steer': control.steer,
+            'throttle': control.throttle,
+            'brake': control.brake,
+        }
+        self.pid_metadata.update(timing)
+        
         if SAVE_PATH and self.step % 1 == 0:
             self.save(tick_data)
         self.get_logger().warning(f"Process step finished, step={self.step}")

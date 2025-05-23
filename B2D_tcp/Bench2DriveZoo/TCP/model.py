@@ -3,6 +3,7 @@ import numpy as np
 import torch 
 from torch import nn
 from TCP.resnet import *
+import time
 
 Discrete_Actions_DICT = {
 	0:  (0, 0, 1, False),
@@ -76,36 +77,11 @@ class TCP(nn.Module):
 		super().__init__()
 		self.config = config
 
-		self.turn_controller = PIDController(K_P=config.turn_KP, K_I=config.turn_KI, K_D=config.turn_KD, n=config.turn_n)
-		self.speed_controller = PIDController(K_P=config.speed_KP, K_I=config.speed_KI, K_D=config.speed_KD, n=config.speed_n)
-
+		# (1. image pre-processing)
+		# 2. CNN Image Backbone (self.perception)
 		self.perception = resnet34(pretrained=True)
 
-		self.measurements = nn.Sequential(
-							nn.Linear(1+2+6, 128),
-							nn.ReLU(inplace=True),
-							nn.Linear(128, 128),
-							nn.ReLU(inplace=True),
-						) #MLP
-
-		self.join_traj = nn.Sequential(
-							nn.Linear(128+1000, 512),
-							nn.ReLU(inplace=True),
-							nn.Linear(512, 512),
-							nn.ReLU(inplace=True),
-							nn.Linear(512, 256),
-							nn.ReLU(inplace=True),
-						)
-
-		self.join_ctrl = nn.Sequential(
-							nn.Linear(128+512, 512),
-							nn.ReLU(inplace=True),
-							nn.Linear(512, 512),
-							nn.ReLU(inplace=True),
-							nn.Linear(512, 256),
-							nn.ReLU(inplace=True),
-						)
-
+		# 3. Vehicle State 인코딩 (self.measurements)
 		self.speed_branch = nn.Sequential(
 							nn.Linear(1000, 256),
 							nn.ReLU(inplace=True),
@@ -113,6 +89,23 @@ class TCP(nn.Module):
 							nn.Dropout2d(p=0.5),
 							nn.ReLU(inplace=True),
 							nn.Linear(256, 1),
+						)
+						
+		self.measurements = nn.Sequential(
+							nn.Linear(1+2+6, 128),
+							nn.ReLU(inplace=True),
+							nn.Linear(128, 128),
+							nn.ReLU(inplace=True),
+						)
+						
+		# 4. traj branch (self.join_traj + GRU + output_traj)
+		self.join_traj = nn.Sequential(
+							nn.Linear(128+1000, 512),
+							nn.ReLU(inplace=True),
+							nn.Linear(512, 512),
+							nn.ReLU(inplace=True),
+							nn.Linear(512, 256),
+							nn.ReLU(inplace=True),
 						)
 
 		self.value_branch_traj = nn.Sequential(
@@ -128,11 +121,18 @@ class TCP(nn.Module):
 					nn.Linear(256, 1536),
 					nn.ReLU(inplace=True),
 		)
+		self.decoder_traj = nn.GRUCell(input_size=4, hidden_size=256)
+		self.output_traj = nn.Linear(256, 2)
 
-		self.feature_branch_ctrl = nn.Sequential(
-					nn.Linear(256, 1536),
-					nn.ReLU(inplace=True),
-		)
+		# 5. ctrl branch (self.join_ctrl + GRU + output_ctrl)
+		self.join_ctrl = nn.Sequential(
+							nn.Linear(128+512, 512),
+							nn.ReLU(inplace=True),
+							nn.Linear(512, 512),
+							nn.ReLU(inplace=True),
+							nn.Linear(512, 256),
+							nn.ReLU(inplace=True),
+						)
 
 		self.value_branch_ctrl = nn.Sequential(
 					nn.Linear(256, 256),
@@ -142,7 +142,11 @@ class TCP(nn.Module):
 					nn.ReLU(inplace=True),
 					nn.Linear(256, 1),
 				)
-		# shared branches_neurons
+
+		self.feature_branch_ctrl = nn.Sequential(
+					nn.Linear(256, 1536),
+					nn.ReLU(inplace=True),
+		)
 
 		self.policy_head = nn.Sequential(
 				nn.Linear(256, 256),
@@ -161,10 +165,8 @@ class TCP(nn.Module):
 
 		self.num_actions = 39
 		self.action_head = nn.Linear(256, self.num_actions)
-
-		self.decoder_traj = nn.GRUCell(input_size=4, hidden_size=256)
-		self.output_traj = nn.Linear(256, 2)
-
+		
+		# 6. Attention
 		self.init_att = nn.Sequential(
 				nn.Linear(128, 256),
 				nn.ReLU(inplace=True),
@@ -179,18 +181,35 @@ class TCP(nn.Module):
 				nn.Softmax(1)
 			)
 
+		# 7. Feature Merge
 		self.merge = nn.Sequential(
 				nn.Linear(512+256, 512),
 				nn.ReLU(inplace=True),
 				nn.Linear(512, 256),
 			)
-		
+
+		# 8. PID control 계산
+		self.turn_controller = PIDController(K_P=config.turn_KP, K_I=config.turn_KI, K_D=config.turn_KD, n=config.turn_n)
+		self.speed_controller = PIDController(K_P=config.speed_KP, K_I=config.speed_KI, K_D=config.speed_KD, n=config.speed_n)
+
 
 	def forward(self, img, state, target_point):
+		timing = {}
+		t0 = time.perf_counter()
+		
 		feature_emb, cnn_feature = self.perception(img)
+		
+		t1 = time.perf_counter()
+		print(f"[TCP] CNN backbone: {(t1 - t0) * 1000:.2f} ms")
+		timing['cnn_ms'] = (t1 - t0) * 1000
+		
 		outputs = {}
 		outputs['pred_speed'] = self.speed_branch(feature_emb)
 		measurement_feature = self.measurements(state)
+		
+		t2 = time.perf_counter()
+		print(f"[TCP] State MLP: {(t2 - t1) * 1000:.2f} ms")
+		timing['state_mlp_ms'] = (t2 - t1) * 1000
 
 		j_traj = self.join_traj(torch.cat([feature_emb, measurement_feature], 1))
 		outputs['pred_value_traj'] = self.value_branch_traj(j_traj)
@@ -198,6 +217,10 @@ class TCP(nn.Module):
 		z = j_traj
 		output_wp = list()
 		traj_hidden_state = list()
+		
+		t3 = time.perf_counter()
+		print(f"[TCP] Traj branch: {(t3 - t2) * 1000:.2f} ms")
+		timing['traj_branch_ms'] = (t3 - t2) * 1000	
 
 		# initial input variable to GRU
 		x = torch.zeros(size=(z.shape[0], 2), dtype=z.dtype).type_as(z)
@@ -223,6 +246,10 @@ class TCP(nn.Module):
 		policy = self.policy_head(j_ctrl)
 		outputs['action_index'] = self.action_head(policy)
 
+		t4 = time.perf_counter()
+		print(f"[TCP] Ctrl branch: {(t4 - t3) * 1000:.2f} ms")
+		timing['ctrl_branch_ms'] = (t4 - t3) * 1000
+
 		x = j_ctrl
 		action_index = outputs['action_index']
 		future_feature, future_action_index = [], []
@@ -246,6 +273,7 @@ class TCP(nn.Module):
 
 		outputs['future_feature'] = future_feature
 		outputs['future_action_index'] = future_action_index
+		outputs['timing'] = timing
 		return outputs
 
 	def process_action(self, pred, command, speed, target_point):
