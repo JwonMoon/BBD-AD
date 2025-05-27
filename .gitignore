@@ -18,7 +18,7 @@
 jw_ws/*
 *.pyc
 */__pycache__/
-*/install
-*/build
-*/log
+*/install/
+*/build/
+*/log/
 ~               
