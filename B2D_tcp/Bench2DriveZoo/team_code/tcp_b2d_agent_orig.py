@@ -19,9 +19,10 @@ from leaderboard.autoagents import autonomous_agent
 
 from TCP.model import TCP
 from TCP.config import GlobalConfig
-from team_code.planner import RoutePlanner
+from team_code.planner_orig import RoutePlanner
 from scipy.optimize import fsolve
 
+IMG_K = 0.1 #jw
 
 SAVE_PATH = os.environ.get('SAVE_PATH', None)
 IS_BENCH2DRIVE = os.environ.get('IS_BENCH2DRIVE', None)
@@ -121,21 +122,24 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 					'type': 'sensor.camera.rgb',
 					'x': 0.80, 'y': 0.0, 'z': 1.60,
 					'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-					'width': 1600, 'height': 900, 'fov': 70,
+					# 'width': 1600, 'height': 900, 'fov': 70,
+					'width': int(1600*IMG_K), 'height': int(900*IMG_K), 'fov': 70, #jw
 					'id': 'CAM_FRONT'
 					},
 				{
 					'type': 'sensor.camera.rgb',
 					'x': 0.27, 'y': -0.55, 'z': 1.60,
 					'roll': 0.0, 'pitch': 0.0, 'yaw': -55.0,
-					'width': 1600, 'height': 900, 'fov': 70,
+					# 'width': 1600, 'height': 900, 'fov': 70,
+					'width': int(1600*IMG_K), 'height': int(900*IMG_K), 'fov': 70, #jw
 					'id': 'CAM_FRONT_LEFT'
 					},
 				{
 					'type': 'sensor.camera.rgb',
 					'x': 0.27, 'y': 0.55, 'z': 1.60,
 					'roll': 0.0, 'pitch': 0.0, 'yaw': 55.0,
-					'width': 1600, 'height': 900, 'fov': 70,
+					# 'width': 1600, 'height': 900, 'fov': 70,
+					'width': int(1600*IMG_K), 'height': int(900*IMG_K), 'fov': 70, #jw
 					'id': 'CAM_FRONT_RIGHT'
 					},
 				# imu
@@ -191,9 +195,10 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 
 		_, front_right_img = cv2.imencode('.jpg', front_right_img, encode_param)
 		front_right_img = cv2.imdecode(front_right_img, cv2.IMREAD_COLOR)
-		front_img = front_img[:, 200:1400, :]
-		front_left_img = front_left_img[:, :1400, :]
-		front_right_img = front_right_img[:, 200:, :]
+	
+		front_img = front_img[:, int(200*IMG_K):int(1400*IMG_K), :]
+		front_left_img = front_left_img[:, :int(1400*IMG_K), :]
+		front_right_img = front_right_img[:, int(200*IMG_K):, :]
 
 		rgb = np.concatenate((front_left_img, front_img, front_right_img), axis=1)
 		rgb = torch.from_numpy(rgb).permute(2, 0, 1).unsqueeze(0).float()
@@ -202,8 +207,11 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 		
 		bev = cv2.cvtColor(input_data['bev'][1][:, :, :3], cv2.COLOR_BGR2RGB)
 		gps = input_data['GPS'][1][:2]
+		print(f"[tick] gps: {gps}")
 		speed = input_data['SPEED'][1]['speed']
+		print(f"[tick] speed: {speed}")
 		compass = input_data['IMU'][1][-1]
+		print(f"[tick] compass: {compass}")
 
 		if (math.isnan(compass) == True): #It can happen that the compass sends nan for a few frames
 			compass = 0.0
@@ -236,6 +244,7 @@ class TCPAgent(autonomous_agent.AutonomousAgent):
 	def run_step(self, input_data, timestamp):
 		if not self.initialized:
 			self._init()
+		print(f"input_data: {input_data}")
 		tick_data = self.tick(input_data)
 		if self.step < self.config.seq_len:
 			rgb = self._im_transform(tick_data['rgb']).unsqueeze(0)

@@ -678,7 +678,7 @@ class LeaderboardEvaluator(object):
             self.manager.load_scenario(self.route_scenario, self.agent_instance, config.index, config.repetition_index)
             self.manager.tick_count = 0
             
-            # jw) repeat tick
+            # jw) orin-warm-up
             while True:
                 if self.agent_instance.is_agent_ready is True:
                     break
