@@ -17,11 +17,8 @@ echo "Launching $IMAGE"
 XSOCK=/tmp/.X11-unix
 XAUTH=$HOME/.Xauthority
 
-SHARED_DOCKER_DIR=/root/shared_dir
-SHARED_DOCKER_DIR_B2D=$SHARED_DOCKER_DIR/B2D_Demo
-SHARED_HOST_DIR_B2D=$HOME/ssd_ws/B2D_Demo
-SHARED_DOCKER_DIR_TF=$SHARED_DOCKER_DIR/transfuser
-SHARED_HOST_DIR_TF=$HOME/ssd_ws/transfuser
+SHARED_DOCKER_DIR=/root/shared_dir/B2D_Demo
+SHARED_HOST_DIR=$HOME/ssd_ws/B2D_Demo
 #SHARED_DOCKER_CARLA_DIR=/root/shared_dir/carla
 #SHARED_HOST_CARLA_DIR=$HOME/orin/ssd_ws/carla/
 
@@ -30,8 +27,8 @@ SHARED_HOST_DIR_TF=$HOME/ssd_ws/transfuser
 
 VOLUMES="--volume=$XSOCK:$XSOCK:rw
         --volume=$XAUTH:$XAUTH:rw
-        --volume=$SHARED_HOST_DIR_TF:$SHARED_DOCKER_DIR_TF:rw
-        --volume=$SHARED_HOST_DIR_B2D:$SHARED_DOCKER_DIR_B2D:rw"
+        --volume=$SHARED_HOST_DIR:$SHARED_DOCKER_DIR:rw
+	--volume=/usr/local/cuda:/usr/local/cuda"
 
 xhost +local:docker
 
@@ -45,7 +42,7 @@ docker run \
     --privileged \
     --gpus all \
     --net=host \
-    --workdir="$SHARED_DOCKER_DIR_B2D" \
+    -w /root \
     $IMAGE
 #--env="DISPLAY=unix${DISPLAY}" \
 # -w /root \

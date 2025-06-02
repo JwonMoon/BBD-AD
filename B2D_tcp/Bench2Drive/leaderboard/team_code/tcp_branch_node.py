@@ -24,7 +24,7 @@ from rclpy.qos import QoSProfile, DurabilityPolicy
 from carla_msgs.msg import CarlaEgoVehicleControl
 from tf_transformations import euler_from_quaternion
 from TCP.model_branch import TCPBranch
-from tcp_msgs.msg import TCPBackboneOutput
+from tcp_msgs.msg import TCPBackboneOutput, TCPBranchOutput
 
 SAVE_PATH = os.environ.get('SAVE_PATH', None)
 PLANNER_TYPE = os.environ.get('PLANNER_TYPE', None)
@@ -57,7 +57,7 @@ class TCPBranchNode(Node):
         
         self.subscription = self.create_subscription(TCPBackboneOutput, '/tcp/backbone_output', self.backbone_callback, QoSProfile(depth=1))
 
-        self.control_pub = self.create_publisher(CarlaEgoVehicleControl, '/tcp/vehicle_control_cmd', QoSProfile(depth=1))
+        self.control_pub = self.create_publisher(TCPBranchOutput, '/tcp/vehicle_control_cmd', QoSProfile(depth=1))
 
         if (self.debug_mode > 0) and SAVE_PATH:
             now = datetime.datetime.now()
@@ -120,7 +120,8 @@ class TCPBranchNode(Node):
 
         # STEP 4: 제어 명령 생성 및 publish
         # self.get_logger().warning(f"- backbone_callback(): generate control")
-        control = CarlaEgoVehicleControl()
+        control = TCPBranchOutput()
+
         if PLANNER_TYPE == 'only_traj':
             self.pid_metadata = metadata_traj
             self.pid_metadata['agent'] = 'only_traj'
@@ -166,8 +167,10 @@ class TCPBranchNode(Node):
         # self.get_logger().warning(f"[TCPBranchNode] Published control: steer={control.steer:.3f}, throttle={control.throttle:.3f}, brake={control.brake:.3f}")
 
         T_pub_start = time.time()
-        self.control_pub.publish(control)
         T_pub_end = time.time()
+        
+        control.step = self.step
+        self.control_pub.publish(control)
 
         # STEP 5: 결과 저장
         if self.debug_mode > 0:
@@ -196,7 +199,7 @@ class TCPBranchNode(Node):
                 'brake': control.brake,
             }
             
-            if SAVE_PATH and self.step % 1 == 0:
+            if SAVE_PATH and self.step % 1 == 0 and self.debug_mode > 2:
                 self.save()
 
             # timing log 저장
