@@ -27,7 +27,7 @@ from sensor_msgs.msg import Image, NavSatFix, Imu, CompressedImage
 from carla_msgs.msg import CarlaEgoVehicleControl, CarlaRoute, CarlaEgoVehicleStatus, CarlaGnssRoute
 from tf_transformations import euler_from_quaternion
 from TCP.model_backbone import TCPBackbone
-from tcp_msgs.msg import TCPBackboneOutput
+from tcp_msgs.msg import TCPBackboneOutput, TickTrigger
 
 SAVE_PATH = os.environ.get('SAVE_PATH', None)
 
@@ -102,6 +102,7 @@ class TCPBackboneNode(Node):
         self.create_subscription(CarlaGnssRoute, '/carla/hero/global_plan_gps', self.global_plan_gps_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(CarlaRoute, '/carla/hero/global_plan', self.global_plan_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.backbone_publisher = self.create_publisher(TCPBackboneOutput, '/tcp/backbone_output', QoSProfile(depth=1))
+        self.tick_trigger_pub = self.create_publisher(TickTrigger, '/tcp/tick_trigger', 1)
 
         if self.debug_mode > 0 and SAVE_PATH:
             now = datetime.datetime.now()
@@ -141,46 +142,46 @@ class TCPBackboneNode(Node):
             return None
 
     def image_front_callback(self, msg):
-        # self.get_logger().info(f"[image_front_callback] step {self.step}")
+        self.get_logger().info(f"[image_front_callback] step {self.step}")
         self.rgb_front = self.decode_image(msg)
         self.try_process_step()
-        # self.get_logger().info(f"[image_front_callback] finished, step {self.step}")
+        self.get_logger().info(f"[image_front_callback] finished, step {self.step}")
 
     def image_front_left_callback(self, msg):
-        # self.get_logger().info(f"[image_front_left_callback] step {self.step}")
+        self.get_logger().info(f"[image_front_left_callback] step {self.step}")
         self.rgb_front_left = self.decode_image(msg)
         self.try_process_step()
-        # self.get_logger().info(f"[image_front_left_callback] finished, step {self.step}")
+        self.get_logger().info(f"[image_front_left_callback] finished, step {self.step}")
 
     def image_front_right_callback(self, msg):
-        # self.get_logger().info(f"[image_front_right_callback] step {self.step}")
+        self.get_logger().info(f"[image_front_right_callback] step {self.step}")
         self.rgb_front_right = self.decode_image(msg)
         self.try_process_step()
-        # self.get_logger().info(f"[image_front_right_callback] finished, step {self.step}")
+        self.get_logger().info(f"[image_front_right_callback] finished, step {self.step}")
 
     def compressed_image_front_callback(self, msg):
-        # self.get_logger().info(f"[compressed_image_front_callback] step {self.step}")
+        self.get_logger().info(f"[compressed_image_front_callback] step {self.step}")
         self.rgb_front = self.decode_image(msg)
         self.try_process_step()
-        # self.get_logger().info(f"[compressed_image_front_callback] finished, step {self.step}")
+        self.get_logger().info(f"[compressed_image_front_callback] finished, step {self.step}")
 
     def compressed_image_front_left_callback(self, msg):
-        # self.get_logger().info(f"[compressed_image_front_left_callback] step {self.step}")
+        self.get_logger().info(f"[compressed_image_front_left_callback] step {self.step}")
         self.rgb_front_left = self.decode_image(msg)
         self.try_process_step()
-        # self.get_logger().info(f"[compressed_image_front_left_callback] finished, step {self.step}")
+        self.get_logger().info(f"[compressed_image_front_left_callback] finished, step {self.step}")
 
     def compressed_image_front_right_callback(self, msg):
-        # self.get_logger().info(f"[compressed_image_front_right_callback] step {self.step}")
+        self.get_logger().info(f"[compressed_image_front_right_callback] step {self.step}")
         self.rgb_front_right = self.decode_image(msg)
         self.try_process_step()
-        # self.get_logger().info(f"[compressed_image_front_right_callback] finished, step {self.step}")
+        self.get_logger().info(f"[compressed_image_front_right_callback] finished, step {self.step}")
 
     def try_process_step(self):
         if self.initialized and self.rgb_front is not None and self.rgb_front_left is not None and self.rgb_front_right is not None and self.gps_received and self.imu_received and self.speed_received:
-            # print(f"let's try process_step(), step {self.step}")
+            print(f"let's try process_step(), step {self.step}")
             self.process_step()
-            # print(f"process_step() returned, step {self.step}")
+            print(f"process_step() returned, step {self.step}")
             
             self.rgb_front = None
             self.rgb_front_left = None
@@ -214,14 +215,14 @@ class TCPBackboneNode(Node):
 
 
     def gps_callback(self, msg):
-        # self.get_logger().info(f"[gps_callback] step {self.step}")
+        self.get_logger().info(f"[gps_callback] step {self.step}")
         self.gps = [msg.latitude, msg.longitude]
         self.gps_received = True
         self.try_process_step()
-        # self.get_logger().info(f"[gps_callback] finished, step {self.step}, lat={msg.latitude}, lon={msg.longitude}") #debug
+        self.get_logger().info(f"[gps_callback] finished, step {self.step}, lat={msg.latitude}, lon={msg.longitude}") #debug
 
     def imu_callback(self, msg):
-        # self.get_logger().info(f"[imu_callback] step {self.step}")
+        self.get_logger().info(f"[imu_callback] step {self.step}")
         # quaternion -> yaw
         orientation_q = msg.orientation
         quaternion = (
@@ -237,17 +238,17 @@ class TCPBackboneNode(Node):
         self.imu = yaw  # yaw in radians
         self.imu_received = True
         self.try_process_step()
-        # self.get_logger().info(f"[imu_callback] finished, step {self.step}, imu={self.imu}") #debug
+        self.get_logger().info(f"[imu_callback] finished, step {self.step}, imu={self.imu}") #debug
 
     def vehicle_status_callback(self, msg):
-        # self.get_logger().info(f"[vehicle_status_callback] step {self.step}")
+        self.get_logger().info(f"[vehicle_status_callback] step {self.step}")
         self.speed = msg.velocity
         self.speed_received = True
         self.try_process_step()
-        # self.get_logger().info(f"[vehicle_status_callback] finished, step {self.step},  speed={self.speed}") #debug
+        self.get_logger().info(f"[vehicle_status_callback] finished, step {self.step},  speed={self.speed}") #debug
 
     def global_plan_callback(self, msg):
-        # self.get_logger().info(f"[global_plan_callback] poses={len(msg.poses)}, road_options={len(msg.road_options)}")
+        self.get_logger().info(f"[global_plan_callback] poses={len(msg.poses)}, road_options={len(msg.road_options)}")
         self._global_plan = []
         for pose, road_option in zip(msg.poses, msg.road_options):
             self._global_plan.append(({
@@ -334,7 +335,7 @@ class TCPBackboneNode(Node):
         rgb = rgb.squeeze(0).permute(1, 2, 0).byte().numpy()
 
         gps = self.gps_to_location(self.gps)
-        # print(f"[DEBUG] Agent GPS to local: x={gps[0]}, y={gps[1]}")
+        print(f"[DEBUG] Agent GPS to local: x={gps[0]}, y={gps[1]}")
         speed = self.speed
         imu = self.imu
 
@@ -349,18 +350,18 @@ class TCPBackboneNode(Node):
         next_wp, next_cmd = self._route_planner.run_step(pos)
         result['next_command'] = next_cmd
 
-        # print(f"[DEBUG] Next WP: x={next_wp[0]}, y={next_wp[1]}")
-        # print(f"[DEBUG] Distance to WP: dx={next_wp[0]-gps[0]}, dy={next_wp[1]-gps[1]}")
-        # print(f"[DEBUG] next_cmd: {next_cmd}")
+        print(f"[DEBUG] Next WP: x={next_wp[0]}, y={next_wp[1]}")
+        print(f"[DEBUG] Distance to WP: dx={next_wp[0]-gps[0]}, dy={next_wp[1]-gps[1]}")
+        print(f"[DEBUG] next_cmd: {next_cmd}")
 
         theta = imu - np.pi / 2
         R = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), np.cos(theta)]])
         local_command_point = np.array([next_wp[0] - pos[0], next_wp[1] - pos[1]])
         local_command_point = R.dot(local_command_point)
         result['target_point'] = tuple(local_command_point)
-        # print(f"[DEBUG] Local target_point (vehicle frame): x={local_command_point[0]:.3f}, y={local_command_point[1]:.3f}")
+        print(f"[DEBUG] Local target_point (vehicle frame): x={local_command_point[0]:.3f}, y={local_command_point[1]:.3f}")
 
-        # self.get_logger().info(f"Tick finished, step={self.step}") #debug        
+        self.get_logger().info(f"Tick finished, step={self.step}") #debug        
         return result
 
     @torch.no_grad()
@@ -422,11 +423,17 @@ class TCPBackboneNode(Node):
         msg.command = cmd_one_hot.view(-1).tolist()
         msg.pred_wp = backbone_outputs['pred_wp'].view(-1).tolist()
         msg.step = self.step
+        tick_trigger_msg = TickTrigger()
+        tick_trigger_msg.trigger = True
+        tick_trigger_msg.step = self.step
 
         # STEP 4: Publish
         T_tx_start = time.time()
-        self.backbone_publisher.publish(msg)
         T_tx_end = time.time()
+        self.tick_trigger_pub.publish(tick_trigger_msg)
+        self.backbone_publisher.publish(msg)
+        print(f"[Backbone] Publish tick_trigger, step={self.step}")
+
 
         # STEP 5: 결과 저장
         if self.debug_mode > 0:
@@ -448,7 +455,7 @@ class TCPBackboneNode(Node):
                 'total_process_step_ms': (T_tx_end - T_t_start) * 1000
             }
             
-            if SAVE_PATH and self.step % 1 == 0:
+            if SAVE_PATH and self.step % 1 == 0 and self.debug_mode > 2:
                 self.save(tick_data)
 
             # timing log 저장
@@ -466,14 +473,13 @@ class TCPBackboneNode(Node):
             
             if self.debug_mode > 1:       
                 T_log_end = time.time()
-                self.get_logger().warning(f"[TCPBackboneNode] logging_time_ms: {(T_log_end - T_b_start_) * 1000}")
+                self.get_logger().warning(f"[TCPBackboneNode] logging_time_ms: {(T_log_end - T_log_start) * 1000}")
                 self.get_logger().warning(f"[TCPBackboneNode] Process step finished, step={self.step}")
 
 
     def save(self, tick_data):
         frame = self.step
-        if self.debug_mode > 2:
-            PILImage.fromarray(tick_data['rgb_front']).save(self.save_path / 'rgb_front' / (f'%04d.png' % frame))
+        PILImage.fromarray(tick_data['rgb_front']).save(self.save_path / 'rgb_front' / (f'%04d.png' % frame))
         with open(self.save_path / 'meta_backbone' / (f'%04d.json' % frame), 'w') as outfile:
             json.dump(self.pid_metadata, outfile, indent=4)
 

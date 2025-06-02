@@ -6,7 +6,7 @@ export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/B2D_Demo/B2D_tcp/Bench2Dr
 
 export CKPT_PATH='./../Bench2DriveZoo/ckpts/tcp_b2d.ckpt'
 export SAVE_PATH='./eval_v1/'
-export DEBUG_MODE=1 #0: default 1: meta_data/timing_log 2: print log 3: save rgb_front
+export DEBUG_MODE=2 #0: default 1: meta_data/timing_log 2: print log 3: save rgb_front/ meta_pid
 export IMG_INPUT='compressed'
 export IMG_K=0.65
 export LEADERBOARD_ROOT=leaderboard

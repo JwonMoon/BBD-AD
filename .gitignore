@@ -1,5 +1,8 @@
+B2D/
 *.zip
 *.mp4
+*.png
+*.csv
 */Bench2Drive/assets
 */Bench2Drive/.git
 */Bench2Drive/.gitignore
@@ -18,7 +21,10 @@
 jw_ws/*
 *.pyc
 */__pycache__/
-*/install/
-*/build/
-*/log/
-~               
+*/install
+*/build
+*/log
+B2D_tcp/tcp_msgs/build
+B2D_tcp/tcp_msgs/install
+B2D_tcp/tcp_msgs/log
+

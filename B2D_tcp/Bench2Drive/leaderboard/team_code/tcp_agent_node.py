@@ -25,6 +25,8 @@ from rclpy.qos import QoSProfile, DurabilityPolicy
 from sensor_msgs.msg import Image, NavSatFix, Imu, CompressedImage
 from carla_msgs.msg import CarlaEgoVehicleControl, CarlaRoute, CarlaEgoVehicleStatus, CarlaGnssRoute
 from tf_transformations import euler_from_quaternion
+from tcp_msgs.msg import TCPBranchOutput
+import csv
 
 SAVE_PATH = os.environ.get('SAVE_PATH', None)
 IS_BENCH2DRIVE = os.environ.get('IS_BENCH2DRIVE', None)
@@ -37,7 +39,7 @@ class TCPAgentNode(Node):
         super().__init__('tcp_agent_node')
 
         self.ckpt_path = ckpt_path
-        self.save_path = save_path if save_path else '/tmp/tcp_agent'
+        # self.save_path = save_path if save_path else '/tmp/tcp_agent'
         self.debug_mode = debug_mode
         self.img_input = img_input if img_input else 'raw'
         self.img_k = float(img_k) if img_k else 1.0
@@ -101,18 +103,24 @@ class TCPAgentNode(Node):
         self.create_subscription(CarlaGnssRoute, '/carla/hero/global_plan_gps', self.global_plan_gps_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(CarlaRoute, '/carla/hero/global_plan', self.global_plan_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
 
-        self.control_pub = self.create_publisher(CarlaEgoVehicleControl, '/tcp/vehicle_control_cmd', QoSProfile(depth=1))
+        self.control_pub = self.create_publisher(TCPBranchOutput, '/tcp/vehicle_control_cmd', QoSProfile(depth=1))
 
-        if SAVE_PATH:
+        if self.debug_mode > 0 and SAVE_PATH:
             now = datetime.datetime.now()
             string = f"tcp_agent_{now.strftime('%m_%d_%H_%M_%S')}"
             self.save_path = pathlib.Path(SAVE_PATH) / string
             self.save_path.mkdir(parents=True, exist_ok=True)
-            (self.save_path / 'rgb_front').mkdir()
-            (self.save_path / 'meta').mkdir()
 
-        if self.debug_mode:
-            self.timer = self.create_timer(1.0, self.debug_callback)
+            (self.save_path / 'meta').mkdir()
+            self.log_file = self.save_path / 'tcp_timing.csv'
+            with open(self.log_file, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    'step', 'T_start', 'T_pub_end', 'T_log_start', 'T_log_end'
+                ])
+
+            if self.debug_mode > 2:
+                (self.save_path / 'rgb_front').mkdir()
 
     def decode_image(self, msg):
         try:
@@ -182,27 +190,28 @@ class TCPAgentNode(Node):
             self.imu_received = False
             self.speed_received = False
         else:
-            print("-----------------------------------------------")
-            print("too early to do process_step()")
-            if not self.initialized:
-                print(f"initialized = {self.initialized}")
-            if self.rgb_front is None:
-                print(f"rgb_front = {self.rgb_front is not None}")
-            if self.rgb_front_left is None:
-                print(f"rgb_front_left = {self.rgb_front_left is not None}")
-            if self.rgb_front_right is None:
-                print(f"rgb_front_right = {self.rgb_front_right is not None}")
-            if not self.gps_received:
-                print(f"gps_received = {self.gps_received}")
-            if not self.imu_received:
-                print(f"imu_received = {self.imu_received}")
-            if not self.speed_received:
-                print(f"speed_received = {self.speed_received}")
-            if not self.global_plan_received:
-                print(f"global_plan_received = {self.global_plan_received}")
-            if not self.global_plan_gps_received:
-                print(f"global_plan_gps_received = {self.global_plan_gps_received}")
-            print("-----------------------------------------------")
+            if self.debug_mode > 1:
+                print("-----------------------------------------------")
+                print("too early to do process_step()")
+                if not self.initialized:
+                    print(f"initialized = {self.initialized}")
+                if self.rgb_front is None:
+                    print(f"rgb_front = {self.rgb_front is not None}")
+                if self.rgb_front_left is None:
+                    print(f"rgb_front_left = {self.rgb_front_left is not None}")
+                if self.rgb_front_right is None:
+                    print(f"rgb_front_right = {self.rgb_front_right is not None}")
+                if not self.gps_received:
+                    print(f"gps_received = {self.gps_received}")
+                if not self.imu_received:
+                    print(f"imu_received = {self.imu_received}")
+                if not self.speed_received:
+                    print(f"speed_received = {self.speed_received}")
+                if not self.global_plan_received:
+                    print(f"global_plan_received = {self.global_plan_received}")
+                if not self.global_plan_gps_received:
+                    print(f"global_plan_gps_received = {self.global_plan_gps_received}")
+                print("-----------------------------------------------")
 
 
     def gps_callback(self, msg):
@@ -306,8 +315,9 @@ class TCPAgentNode(Node):
 
     def tick(self):
         self.step += 1
-
-        self.get_logger().info(f"Tick called, GPS={self.gps}, step={self.step}") #debug
+        
+        if self.debug_mode > 1:
+            self.get_logger().info(f"Tick called, GPS={self.gps}, step={self.step}") #debug
         if not all([self.rgb_front is not None, self.rgb_front_left is not None, self.rgb_front_right is not None, self.initialized]):
             self.get_logger().warning(f"- tick(): No rgb_front or not initialized at step {self.step}")
             return None
@@ -359,18 +369,21 @@ class TCPAgentNode(Node):
 
     @torch.no_grad()
     def process_step(self):
-        self.get_logger().warning(f"Process step called, step={self.step}")
+        if self.debug_mode > 1:
+            self.get_logger().warning(f"Process step called, step={self.step}")
+
+        T_start = time.time()
+        # time) ROS2 시계 기준 시간 기록
+        ros_time_ns = self.get_clock().now().nanoseconds
 
         tick_data = self.tick()
         if tick_data is None or self.step < self.config.seq_len:
             self.get_logger().warning(f"- process_step(): No tick data or step < seq_len at step {self.step}, retutn control 0")
             rgb = self._im_transform(tick_data['rgb']).unsqueeze(0)
-            control = CarlaEgoVehicleControl()
+            control = TCPBranchOutput()
             self.control_pub.publish(control)
             return
 
-        # time) ROS2 시계 기준 시간 기록
-        ros_time_ns = self.get_clock().now().nanoseconds
 
         # STEP 0: 전체 시간 측정 시작
         t0 = time.perf_counter()
@@ -415,7 +428,7 @@ class TCPAgentNode(Node):
 
         # STEP 4: 제어 명령 생성 및 publish
         self.get_logger().warning(f"- process_step(): generate control")
-        control = CarlaEgoVehicleControl()
+        control = TCPBranchOutput()
         if PLANNER_TYPE == 'only_traj':
             self.pid_metadata = metadata_traj
             self.pid_metadata['agent'] = 'only_traj'
@@ -471,38 +484,54 @@ class TCPAgentNode(Node):
         #     'throttle': control.throttle,
         #     'brake': control.brake
         # })
+        
+        control.step = self.step
 
         self.get_logger().warning(f"- process_step(): control_pub()")
         self.get_logger().warning(f"[PUB CONTROL] steer={control.steer}, throttle={control.throttle}, brake={control.brake}") #debug
         self.control_pub.publish(control)
+        T_pub_end = time.time()
         t6 = time.perf_counter()
 
         # STEP 5: 결과 저장
-        timing = pred.get('timing', {})  # 없을 수도 있으니 안전하게
-        
-        self.pid_metadata = {
-            'step': self.step,
-            'ros_time_ns': ros_time_ns,
-            'image_preprocess_ms': (t2 - t1) * 1000,
-            'model_inference_ms': (t4 - t3) * 1000,
-            'pid_calc_ms': (t5 - t4) * 1000,
-            'publish_ms': (t6 - t5) * 1000,
-            'total_process_step_ms': (t6 - t0) * 1000,
-            'steer_ctrl': float(steer_ctrl),
-            'steer_traj': float(steer_traj),
-            'throttle_ctrl': float(throttle_ctrl),
-            'throttle_traj': float(throttle_traj),
-            'brake_ctrl': float(brake_ctrl),
-            'brake_traj': float(brake_traj),
-            'steer': control.steer,
-            'throttle': control.throttle,
-            'brake': control.brake,
-        }
-        self.pid_metadata.update(timing)
-        
-        if SAVE_PATH and self.step % 1 == 0:
-            self.save(tick_data)
-        self.get_logger().warning(f"Process step finished, step={self.step}")
+        if self.debug_mode > 0:
+            timing = pred.get('timing', {})  # 없을 수도 있으니 안전하게
+            T_log_start = time.time()
+            self.pid_metadata = {
+                'step': self.step,
+                'ros_time_ns': ros_time_ns,
+                'image_preprocess_ms': (t2 - t1) * 1000,
+                'model_inference_ms': (t4 - t3) * 1000,
+                'pid_calc_ms': (t5 - t4) * 1000,
+                'publish_ms': (t6 - t5) * 1000,
+                'total_process_step_ms': (t6 - t0) * 1000,
+                'steer_ctrl': float(steer_ctrl),
+                'steer_traj': float(steer_traj),
+                'throttle_ctrl': float(throttle_ctrl),
+                'throttle_traj': float(throttle_traj),
+                'brake_ctrl': float(brake_ctrl),
+                'brake_traj': float(brake_traj),
+                'steer': control.steer,
+                'throttle': control.throttle,
+                'brake': control.brake,
+            }
+            self.pid_metadata.update(timing)
+            
+            if SAVE_PATH and self.step % 1 == 0 and self.debug_mode > 2:
+                self.save(tick_data)
+
+            # timing log 저장
+            if self.log_file:
+                with open(self.log_file, 'a', newline='') as f:
+                    writer = csv.writer(f)
+                    writer.writerow([
+                        self.step,
+                        T_start, T_pub_end,
+                        T_log_start, time.time()
+                    ])
+            
+            if self.debug_mode > 1: 
+                self.get_logger().warning(f"Process step finished, step={self.step}")
 
     def save(self, tick_data):
         frame = self.step
@@ -519,9 +548,6 @@ class TCPAgentNode(Node):
         x = mx - scale * self.lon_ref * math.pi * EARTH_RADIUS_EQUA / 180.0
         return np.array([x, y])
 
-    def debug_callback(self):
-        pass
-
     def destroy(self):
         del self.net
         torch.cuda.empty_cache()
@@ -534,13 +560,14 @@ def main():
     parser = argparse.ArgumentParser(description='TCP Agent Node for CARLA')
     parser.add_argument('--ckpt-path', required=True, help='Path to model checkpoint')
     parser.add_argument('--save-path', default=None, help='Path to save debug outputs')
-    parser.add_argument('--debug', default=True, help='Run in debug mode')
+    # parser.add_argument('--debug', default=True, help='Run in debug mode')
+    parser.add_argument('--debug-mode', type=int, default=0, help='Level of debug mode')
     parser.add_argument('--img-input', default='raw', help='Type for input camera image')
     parser.add_argument('--img-k', type=float, default=1.0, help='Input camera image resolution ratio')
     args = parser.parse_args()
 
     rclpy.init()
-    node = TCPAgentNode(args.ckpt_path, args.save_path, args.debug, args.img_input, args.img_k)
+    node = TCPAgentNode(args.ckpt_path, args.save_path, args.debug_mode, args.img_input, args.img_k)
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
