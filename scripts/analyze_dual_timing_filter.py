@@ -62,7 +62,7 @@ def main(backbone_path, branch_path, skip_initial_n=20):
     sns.lineplot(data=backbone_df, x="step", y="bb_total_ms", label="Backbone Total")
     sns.lineplot(data=branch_df, x="step", y="br_total_ms", label="Branch Total")
     sns.lineplot(data=branch_df, x="step", y="network_latency_ms", label="Network Latency")
-    plt.plot(branch_df["step"][:-1], idle_gaps_ms, label="Idle Gap", linestyle='--', marker='o')
+    # plt.plot(branch_df["step"][:-1], idle_gaps_ms, label="Idle Gap", linestyle='--', marker='o')
     plt.xlabel("Step")
     plt.ylabel("Time (ms)")
     plt.title(f"Timing Breakdown Over Steps (skipping first {skip_initial_n} steps)")

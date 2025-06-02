@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 # backbone_time = 185.3
 # network_latency = 0.3
 # branch_time = 50.2
-backbone_time = 195.5
-network_latency = 8.7
-branch_time = 62.05
+backbone_time = 194.702
+network_latency = 20.029
+branch_time = 64.417
 idle_gap = 15.0 
 
 # 시작/끝 시간 계산

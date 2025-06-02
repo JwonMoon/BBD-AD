@@ -33,12 +33,11 @@ from leaderboard.utils.result_writer import ResultOutputProvider
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
-# from carla_msgs.msg import CarlaEgoVehicleControl
-from tcp_msgs.msg import TickTrigger
+from carla_msgs.msg import CarlaEgoVehicleControl
 
 #jw) to ROS node
-class ScenarioManager(Node):
-# class ScenarioManager(object):
+# class ScenarioManager(Node):
+class ScenarioManager(object):
 
     """
     Basic scenario manager class. This class holds all functionality
@@ -60,8 +59,8 @@ class ScenarioManager(Node):
         Setups up the parameters, which will be filled at load_scenario()
         """
         #jw) to ROS node
-        rclpy.init(args=None)
-        super().__init__('scenario_manager_node')
+        # rclpy.init(args=None)
+        # super().__init__('scenario_manager_node')
 
         self.route_index = None
         self.scenario = None
@@ -87,6 +86,7 @@ class ScenarioManager(Node):
         self._scenario_thread = None
 
         self._statistics_manager = statistics_manager
+
         self.tick_count = 0
 
         #jw) to ROS node
@@ -96,32 +96,9 @@ class ScenarioManager(Node):
         #     self._control_callback,
         #     QoSProfile(depth=1)
         # )
-        self._tick_trigger_sub = self.create_subscription(
-            TickTrigger,
-            '/tick_trigger',
-            self._tick_trigger_callback,
-            QoSProfile(depth=1)
-        )
 
         # Use the callback_id inside the signal handler to allow external interrupts
         signal.signal(signal.SIGINT, self.signal_handler)
-
-    # jw) to ROS node
-    # def _control_callback(self, msg):
-    #     if self._running:
-    #         try:
-    #             self._tick_scenario()
-    #         except Exception as e:
-    #             self.get_logger().error(f"[ScenarioManager ROS2] tick exception: {str(e)}")
-
-    #jw) to ROS node
-    def _tick_trigger_callback(self, msg):
-        if msg.trigger and self._running:
-            print(f"[ScenarioManager] Tick trigger received (step={msg.step})")
-            try:
-                self._tick_scenario()
-            except Exception as e:
-                self.get_logger().error(f"[ScenarioManager] tick_trigger_callback error: {e}")
 
     def signal_handler(self, signum, frame):
         """
@@ -132,6 +109,14 @@ class ScenarioManager(Node):
         elif self._watchdog and not self._watchdog.get_status():
             raise RuntimeError("The simulation took longer than {}s to update".format(self._timeout))
         self._running = False
+
+    # jw) to ROS node
+    # def _control_callback(self, msg):
+    #     if self._running:
+    #         try:
+    #             self._tick_scenario()
+    #         except Exception as e:
+    #             self.get_logger().error(f"[ScenarioManager ROS2] tick exception: {str(e)}")
 
     def cleanup(self):
         """
@@ -203,7 +188,6 @@ class ScenarioManager(Node):
 
         # while self._running:
         #     self._tick_scenario()
-        
         # while True:
         #     if not self._running:
         #         print("[ScenarioManager] self._running == False !!")
@@ -211,36 +195,82 @@ class ScenarioManager(Node):
         #     self._tick_scenario()
             
         #jw) to ROS node
-        try:
-            rclpy.spin(self)
-        except KeyboardInterrupt:
-            self._running = False
+        # try:
+        #     while self._running:
+        #         time.sleep(0.001)
+        # except KeyboardInterrupt:
+        #     self._running = False
 
-    def _tick_scenario(self):
+    def _tick_scenario(self, ego_action):
         """
         Run next tick of scenario and the agent and tick the world.
         """
         print("[scenario_manager] 1. _tick_scenario() called")
+        tick_start_time = time.time()
+        
+        # apply_control
+        try:
+            # self._agent_watchdog.resume()
+            # self._agent_watchdog.update()
+            # ego_action = self._agent_wrapper()
+            print("[scenario_manager] 3. get ego_action:", ego_action)
+            # self._agent_watchdog.pause()
+
+        # Special exception inside the agent that isn't caused by the agent
+        except SensorReceivedNoData as e:
+            raise RuntimeError(e)
+
+        except Exception as e:
+            raise AgentError(e)
+
+        # self._watchdog.resume()
+        print("[scenario_manager] 4. apply control")
+        self.ego_vehicles[0].apply_control(ego_action)
+
+        # Tick scenario. Add the ego control to the blackboard in case some behaviors want to change it
+        py_trees.blackboard.Blackboard().set("AV_control", ego_action, overwrite=True)
+        self.scenario_tree.tick_once()
+
+        if self._debug_mode > 1:
+            self.compute_duration_time()
+
+            # Update live statistics
+            self._statistics_manager.compute_route_statistics(
+                self.route_index,
+                self.scenario_duration_system,
+                self.scenario_duration_game,
+                failure_message=""
+            )
+            self._statistics_manager.write_live_results(
+                self.route_index,
+                self.ego_vehicles[0].get_velocity().length(),
+                ego_action,
+                self.ego_vehicles[0].get_location()
+            )
+
+        if self._debug_mode > 2:
+            print("\n")
+            print("[Tree Debug] scenario_tree status:", self.scenario_tree.status)
+            py_trees.display.print_ascii_tree(self.scenario_tree, show_status=True)
+            sys.stdout.flush()
+
+        if self.scenario_tree.status != py_trees.common.Status.RUNNING:
+            self._running = False
+            print(f"self.scenario_tree.status = {self.scenario_tree.status}")
+            print("@@@@ self._running = False @@@@")
+
+        ego_trans = self.ego_vehicles[0].get_transform()
+        self._spectator.set_transform(carla.Transform(ego_trans.location + carla.Location(z=70),
+                                                        carla.Rotation(pitch=-90)))
+    
+        # tick_simulatrion
         if self._running and self.get_running_status():
+            # CarlaDataProvider.get_world().tick(self._timeout)
+            
             #jw) debug
             print(f"CarlaDataProvider.get_world().tick(self._timeout)")
-            # start_time = time.time()
             CarlaDataProvider.get_world().tick(self._timeout)
-            # end_time = time.time()
-
-            # duration = end_time - start_time
-            # print(f"[TICK-TIME] Carla tick() took {duration:.4f} seconds")
-            
-            # #jw) debug
-            # # CSV 저장 경로 설정
-            # csv_path = "/root/shared_dir/B2D_Demo/jw_ws/tick_time/tick_times.csv"
-            # # CSV 파일에 기록
-            # write_header = not os.path.exists(csv_path)
-            # with open(csv_path, mode='a', newline='') as f:
-            #     writer = csv.writer(f)
-            #     if write_header:
-            #         writer.writerow(['timestamp', 'tick_duration_sec'])
-            #     writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), f"{duration:.6f}"])
+        tick_end_time = time.time()
 
         print("[scenario_manager] 2. carla get snapshot()")
         timestamp = CarlaDataProvider.get_world().get_snapshot().timestamp
@@ -248,69 +278,17 @@ class ScenarioManager(Node):
         if self._timestamp_last_run < timestamp.elapsed_seconds and self._running:
             self._timestamp_last_run = timestamp.elapsed_seconds
 
-            self._watchdog.update()
+            # self._watchdog.update()
             # Update game time and actor information
             GameTime.on_carla_tick(timestamp)
             CarlaDataProvider.on_carla_tick()
             self.tick_count += 1
-            self._watchdog.pause()
+            # self._watchdog.pause()
 
             if self.tick_count > 4000:
                 raise TickRuntimeError("RuntimeError, tick_count > 4000")
-
-            try:
-                self._agent_watchdog.resume()
-                self._agent_watchdog.update()
-                ego_action = self._agent_wrapper()
-                print("[scenario_manager] 3. get ego_action:", ego_action)
-                self._agent_watchdog.pause()
-
-            # Special exception inside the agent that isn't caused by the agent
-            except SensorReceivedNoData as e:
-                raise RuntimeError(e)
-
-            except Exception as e:
-                raise AgentError(e)
-
-            self._watchdog.resume()
-            print("[scenario_manager] 4. apply control")
-            self.ego_vehicles[0].apply_control(ego_action)
-
-            # Tick scenario. Add the ego control to the blackboard in case some behaviors want to change it
-            py_trees.blackboard.Blackboard().set("AV_control", ego_action, overwrite=True)
-            self.scenario_tree.tick_once()
-
-            if self._debug_mode > 1:
-                self.compute_duration_time()
-
-                # Update live statistics
-                self._statistics_manager.compute_route_statistics(
-                    self.route_index,
-                    self.scenario_duration_system,
-                    self.scenario_duration_game,
-                    failure_message=""
-                )
-                self._statistics_manager.write_live_results(
-                    self.route_index,
-                    self.ego_vehicles[0].get_velocity().length(),
-                    ego_action,
-                    self.ego_vehicles[0].get_location()
-                )
-
-            if self._debug_mode > 2:
-                print("\n")
-                print("[Tree Debug] scenario_tree status:", self.scenario_tree.status)
-                py_trees.display.print_ascii_tree(self.scenario_tree, show_status=True)
-                sys.stdout.flush()
-
-            if self.scenario_tree.status != py_trees.common.Status.RUNNING:
-                self._running = False
-                print(f"self.scenario_tree.status = {self.scenario_tree.status}")
-                print("@@@@ self._running = False @@@@")
-
-            ego_trans = self.ego_vehicles[0].get_transform()
-            self._spectator.set_transform(carla.Transform(ego_trans.location + carla.Location(z=70),
-                                                          carla.Rotation(pitch=-90)))
+           
+        return tick_start_time, tick_end_time
 
     def get_running_status(self):
         """

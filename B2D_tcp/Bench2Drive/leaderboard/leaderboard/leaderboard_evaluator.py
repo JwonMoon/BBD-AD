@@ -54,9 +54,12 @@ from carla_msgs.srv import SpawnObject, DestroyObject
 from diagnostic_msgs.msg import KeyValue
 from geometry_msgs.msg import Point, Pose, Quaternion
 from sensor_msgs.msg import NavSatFix
-# import transforms3d #delete
+from tcp_msgs.msg import TCPBranchOutput
+import pathlib, csv
 
 import atexit
+
+SAVE_PATH = os.environ.get('SAVE_PATH', None)
 
 sensors_to_icons = {
     'sensor.camera.rgb':        'carla_camera',
@@ -107,19 +110,27 @@ class EvaluatorAgent(Node, ROSBaseAgent):
         AutonomousAgent.__init__(self, carla_host, carla_port, debug)  # ROSBaseAgent.__init__ 건너뜀
         Node.__init__(self, 'evaluator_node')
         
-        # self._spawn_object_service = self.create_client(SpawnObject, "/carla/spawn_object")
-        # self._destroy_object_service = self.create_client(DestroyObject, "/carla/destroy_object")
-        # self._spawn_object_service.wait_for_service()
-        # self._destroy_object_service.wait_for_service()
-        self._control_subscriber = self.create_subscription(
-            CarlaEgoVehicleControl, '/tcp/vehicle_control_cmd',
-            self._vehicle_control_cmd_callback, QoSProfile(depth=1)
-        )
+        self._control_subscriber = self.create_subscription(TCPBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, QoSProfile(depth=1))
+
         self._path_publisher = self.create_publisher(CarlaRoute, "/carla/hero/global_plan", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self._path_gps_publisher = self.create_publisher(CarlaGnssRoute, "/carla/hero/global_plan_gps", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
 
+        self._scenario_manager = None
         self.control = None
         self.is_agent_ready = False
+
+        if debug and SAVE_PATH:
+            now = datetime.now()
+            string = f"tcp_agent_{now.strftime('%m_%d_%H_%M_%S')}"
+            self.save_path = pathlib.Path(SAVE_PATH) / string
+            self.save_path.mkdir(parents=True, exist_ok=True)
+
+            self.log_file = self.save_path / 'evaluator_tcp_timing.csv'
+            with open(self.log_file, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    'step', 'T_tick_start', 'T_tick_end'
+                ])
     
     # def sensors(self):
     #     return [
@@ -300,8 +311,8 @@ class EvaluatorAgent(Node, ROSBaseAgent):
         self._path_gps_publisher.publish(path_gps)
         print(f"Publishing global plan gps: poses={len(path_gps.coordinates)}, road_options={len(path_gps.road_options)}")
         
-    # def set_scenario_manager(self, scenario_manager):
-    #     self._scenario_manager = scenario_manager
+    def set_scenario_manager(self, scenario_manager):
+        self._scenario_manager = scenario_manager
 
     #ros_base_agent fuction
     def run_step(self):
@@ -328,7 +339,6 @@ class EvaluatorAgent(Node, ROSBaseAgent):
         # return control
 
     def _vehicle_control_cmd_callback(self, msg):
-        print("###################### Control cmd callback !")
         if self.is_agent_ready is False:
             self.is_agent_ready = True
 
@@ -341,6 +351,22 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             manual_gear_shift=msg.manual_gear_shift, 
             gear=msg.gear
         )
+        
+        if self._scenario_manager is not None:
+            print(f"[Evaluator ROS2] Received control_cmd")
+            try:
+                T_tick_start, T_tick_end = self._scenario_manager._tick_scenario(self.control)
+            except Exception as e:
+                print(f"tick_callback error: {e}")
+
+        # timing log 저장
+        if self.log_file:
+            with open(self.log_file, 'a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    msg.step,
+                    T_tick_start, T_tick_end
+                ])
 
         # if hasattr(self, '_scenario_manager'):
         #     self._scenario_manager._tick_scenario()
@@ -627,7 +653,7 @@ class LeaderboardEvaluator(object):
             # print("RouteScenario.gps_route:", self.route_scenario.gps_route)
             # print("RouteScenario.route:", self.route_scenario.route)
             self.agent_instance.set_global_plan(self.route_scenario.gps_route, self.route_scenario.route)
-            # self.agent_instance.set_scenario_manager(self.manager)  # jw) change run_step()
+            self.agent_instance.set_scenario_manager(self.manager)  # jw) change run_step()
 
             # Check and store the sensors
             if not self.sensors:
@@ -691,6 +717,7 @@ class LeaderboardEvaluator(object):
             print(f"\033[1m>>> >>> self.agent_instance.is_agent_ready: {self.agent_instance.is_agent_ready}\033[0m", flush=True)
             print("\033[1m>>> run_scenario\033[0m", flush=True)
             self.manager.run_scenario()
+            rclpy.spin(self.agent_instance)
 
         except AgentError:
             # The agent has failed -> stop the route
