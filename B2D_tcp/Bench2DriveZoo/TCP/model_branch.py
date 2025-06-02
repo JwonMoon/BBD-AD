@@ -250,7 +250,7 @@ class TCPBranch(nn.Module):
 		outputs['action_index'] = self.action_head(policy)
 
 		t4 = time.perf_counter()
-		print(f"[TCP] Ctrl branch: {(t4 - t3) * 1000:.2f} ms")
+		# print(f"[TCP] Ctrl branch: {(t4 - t3) * 1000:.2f} ms")
 		timing['ctrl_branch_ms'] = (t4 - t3) * 1000
 
 		x = j_ctrl
