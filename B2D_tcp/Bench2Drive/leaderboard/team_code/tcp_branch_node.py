@@ -70,20 +70,20 @@ class TCPBranchNode(Node):
             with open(self.log_file, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
-                    'step', 'T_rx_start', 'T_rx_end', 'T_br_start', 'T_br_end', 'T_pid_start', 'T_pid_end', 'T_pub_start', 'T_pub_end', 'T_log_start', 'T_log_end'
+                    'step', 'T_cb_start', 'T_rx_start', 'T_rx_end', 'T_br_start', 'T_br_end', 'T_pid_start', 'T_pid_end', 'T_pub_start', 'T_pub_end', 'T_log_start', 'T_log_end'
                 ])
 
     def backbone_callback(self, msg):
+        T_cb_start = time.time()
+        ros_time_ns = self.get_clock().now().nanoseconds #ROS2 시계 기준 시간 기록
+
         if self.debug_mode > 1:
             self.get_logger().warning(f"[TCPBranchNode] Process step called, step={self.step}")
 
         # timing
         T_rx_start = time.time()
-        # time) ROS2 시계 기준 시간 기록
-        ros_time_ns = self.get_clock().now().nanoseconds
-        
-        self.step = msg.step
 
+        self.step = msg.step
         # Tensor 복원
         cnn_feature = torch.tensor(msg.cnn_feature, dtype=torch.float32).view(1, 512, 8, 29).cuda()
         measurement_feature = torch.tensor(msg.measurement_feature, dtype=torch.float32).view(1, 128).cuda()
@@ -165,12 +165,11 @@ class TCPBranchNode(Node):
 
         # self.get_logger().warning(f"- backbone_callback(): control_pub()")
         # self.get_logger().warning(f"[TCPBranchNode] Published control: steer={control.steer:.3f}, throttle={control.throttle:.3f}, brake={control.brake:.3f}")
+        control.step = self.step
 
         T_pub_start = time.time()
-        T_pub_end = time.time()
-        
-        control.step = self.step
         self.control_pub.publish(control)
+        T_pub_end = time.time()
 
         # STEP 5: 결과 저장
         if self.debug_mode > 0:
@@ -185,7 +184,7 @@ class TCPBranchNode(Node):
                 'branch_inference_ms': (T_br_end -T_br_start) * 1000,
                 'pid_calc_ms': (T_pid_end - T_pid_start) * 1000,
                 'publish_ms': (T_pub_end - T_pub_start) * 1000,
-                'total_process_step_ms': (T_pub_end - T_rx_start) * 1000,
+                'total_process_step_ms': (T_pub_end - T_cb_start) * 1000,
 
                 'steer_ctrl': float(steer_ctrl),
                 'steer_traj': float(steer_traj),
@@ -207,7 +206,7 @@ class TCPBranchNode(Node):
                 with open(self.log_file, 'a', newline='') as f:
                     writer = csv.writer(f)
                     writer.writerow([
-                        self.step,
+                        self.step, T_cb_start,
                         T_rx_start, T_rx_end,
                         T_br_start, T_br_end,
                         T_pid_start, T_pid_end,
