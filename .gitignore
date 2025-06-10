@@ -29,3 +29,4 @@ B2D_tcp/tcp_msgs/build
 B2D_tcp/tcp_msgs/install
 B2D_tcp/tcp_msgs/log
 
+*.db3
