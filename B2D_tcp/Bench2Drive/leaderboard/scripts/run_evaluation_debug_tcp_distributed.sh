@@ -24,6 +24,6 @@ ROUTES="${BASE_ROUTES}.xml"
 CHECKPOINT_ENDPOINT="${BASE_CHECKPOINT_ENDPOINT}.json"
 # HOST="192.168.0.6" #inwoong
 HOST="127.0.0.1"  #localhost
-DEBUG_CHALLENGE=1
+DEBUG_MODE=1
 bash leaderboard/scripts/run_evaluation_distributed.sh $PORT $TM_PORT $IS_BENCH2DRIVE $ROUTES $TEAM_AGENT $TEAM_CONFIG \
-                                        $CHECKPOINT_ENDPOINT $SAVE_PATH $PLANNER_TYPE $GPU_RANK $HOST $DEBUG_CHALLENGE
+                                        $CHECKPOINT_ENDPOINT $SAVE_PATH $PLANNER_TYPE $GPU_RANK $HOST $DEBUG_MODE

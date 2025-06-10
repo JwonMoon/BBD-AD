@@ -316,9 +316,10 @@ class ScenarioManager(object):
         tick_start_time = time.time()
         if self._running and self.get_running_status():
             #jw) debug
-            print(f"CarlaDataProvider.get_world().tick(self._timeout)")
+            # print(f"CarlaDataProvider.get_world().tick(self._timeout)")
+            carla_tick_start_time = time.time() 
             CarlaDataProvider.get_world().tick(self._timeout)
-        tick_end_time = time.time()
+            carla_tick_end_time = time.time() 
   
         print("[scenario_manager] 2. carla get snapshot()")
         timestamp = CarlaDataProvider.get_world().get_snapshot().timestamp
@@ -336,9 +337,11 @@ class ScenarioManager(object):
             if self.tick_count > 4000:
                 raise TickRuntimeError("RuntimeError, tick_count > 4000")
 
-        return tick_start_time, tick_end_time
+        tick_end_time = time.time()
+        return tick_start_time, carla_tick_start_time, carla_tick_end_time, tick_end_time
     
     def _apply_control(self, ego_action, step):
+        control_start_time = time.time()
         try:
             self._agent_watchdog.resume()
             self._agent_watchdog.update()
@@ -355,9 +358,9 @@ class ScenarioManager(object):
 
         self._watchdog.resume()
         print("[scenario_manager] 4. apply control")
-        control_start_time = time.time()
+        carla_control_start_time = time.time()
         self.ego_vehicles[0].apply_control(ego_action)
-        control_end_time = time.time()
+        carla_control_end_time = time.time()
 
         # Tick scenario. Add the ego control to the blackboard in case some behaviors want to change it
         py_trees.blackboard.Blackboard().set("AV_control", ego_action, overwrite=True)
@@ -394,7 +397,9 @@ class ScenarioManager(object):
         ego_trans = self.ego_vehicles[0].get_transform()
         self._spectator.set_transform(carla.Transform(ego_trans.location + carla.Location(z=70),
                                                         carla.Rotation(pitch=-90)))
-        return control_start_time, control_end_time
+        
+        control_end_time = time.time()
+        return control_start_time, carla_control_start_time, carla_control_end_time, control_end_time
 
     def get_running_status(self):
         """

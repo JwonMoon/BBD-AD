@@ -28,27 +28,27 @@ export TEAM_CONFIG=${6} #jw) 필요 없음
 export CHECKPOINT_ENDPOINT=${7}
 export SAVE_PATH=${8}
 export HOST=${11} #jw
-# export DEBUG_CHALLENGE=0
-export DEBUG_CHALLENGE=${12} #jw
+# export DEBUG_MODE=0
+export DEBUG_MODE=${12} #jw
 
 
-# echo "PORT=$PORT"
-# echo "TM_PORT=$TM_PORT"
-# echo "IS_BENCH2DRIVE=$IS_BENCH2DRIVE"
-# echo "ROUTES=$ROUTES"
-# echo "TEAM_AGENT=$TEAM_AGENT"
-# echo "TEAM_CONFIG=$TEAM_CONFIG"
-# echo "CHECKPOINT_ENDPOINT=$CHECKPOINT_ENDPOINT"
-# echo "SAVE_PATH=$SAVE_PATH"
-# echo "PLANNER_TYPE=$PLANNER_TYPE"
-# echo "GPU_RANK=$GPU_RANK"
-# echo "HOST=$HOST"
-# echo "DEBUG_CHALLENGE=$DEBUG_CHALLENGE"
+echo "PORT=$PORT"
+echo "TM_PORT=$TM_PORT"
+echo "IS_BENCH2DRIVE=$IS_BENCH2DRIVE"
+echo "ROUTES=$ROUTES"
+echo "TEAM_AGENT=$TEAM_AGENT"
+echo "TEAM_CONFIG=$TEAM_CONFIG"
+echo "CHECKPOINT_ENDPOINT=$CHECKPOINT_ENDPOINT"
+echo "SAVE_PATH=$SAVE_PATH"
+echo "PLANNER_TYPE=$PLANNER_TYPE"
+echo "GPU_RANK=$GPU_RANK"
+echo "HOST=$HOST"
+echo "DEBUG_MODE=$DEBUG_MODE"
 
-# echo ""
-# echo "▶ Calling run_evaluation.sh with 12 args:"
-# echo "$PORT" "$TM_PORT" "$IS_BENCH2DRIVE" "$ROUTES" "$TEAM_AGENT" "$TEAM_CONFIG" \
-#      "$CHECKPOINT_ENDPOINT" "$SAVE_PATH" "$PLANNER_TYPE" "$GPU_RANK" "$HOST" "$DEBUG_CHALLENGE"
+echo ""
+echo "▶ Calling run_evaluation.sh with 12 args:"
+echo "$PORT" "$TM_PORT" "$IS_BENCH2DRIVE" "$ROUTES" "$TEAM_AGENT" "$TEAM_CONFIG" \
+     "$CHECKPOINT_ENDPOINT" "$SAVE_PATH" "$PLANNER_TYPE" "$GPU_RANK" "$HOST" "$DEBUG_MODE"
 
 
 CUDA_VISIBLE_DEVICES=${GPU_RANK} python ${LEADERBOARD_ROOT}/leaderboard/leaderboard_evaluator_distributed.py \
@@ -57,7 +57,7 @@ CUDA_VISIBLE_DEVICES=${GPU_RANK} python ${LEADERBOARD_ROOT}/leaderboard/leaderbo
 --track=${CHALLENGE_TRACK_CODENAME} \
 --checkpoint=${CHECKPOINT_ENDPOINT} \
 --agent=${TEAM_AGENT} \
---debug=${DEBUG_CHALLENGE} \
+--debug=${DEBUG_MODE} \
 --record=${RECORD_PATH} \
 --resume=${RESUME} \
 --port=${PORT} \

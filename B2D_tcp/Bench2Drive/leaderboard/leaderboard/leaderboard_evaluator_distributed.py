@@ -125,17 +125,18 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             self.save_path = pathlib.Path(SAVE_PATH) / string
             self.save_path.mkdir(parents=True, exist_ok=True)
             
+            # timing
             self.log_file_bb = self.save_path / 'evaluator_backbone_cb_timing.csv'
             with open(self.log_file_bb, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
-                    'step', 'T_bb_cb_start', 'T_bb_cb_end'
+                    'step', 'T_bb_cb_start', 'T_car_tick_start', 'T_car_tick_end', 'T_bb_cb_end' # jw changed
                 ])
             self.log_file_br = self.save_path / 'evaluator_branch_cb_timing.csv'
             with open(self.log_file_br, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
-                    'step', 'T_br_cb_start', 'T_br_cb_end'
+                    'step', 'T_br_cb_start', 'T_car_ctrl_start', 'T_car_ctrl_end', 'T_br_cb_end'
                 ])
 
     def sensors(self): #original
@@ -288,7 +289,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
         if msg.trigger and self._scenario_manager is not None:
             print(f"[Evaluator ROS2] Received tick trigger, step={msg.step}")
             try:
-                T_bb_cb_start, T_bb_cb_end = self._scenario_manager._tick_simulation(msg.step)
+                T_bb_cb_start, T_car_tick_start, T_car_tick_end, T_bb_cb_end = self._scenario_manager._tick_simulation(msg.step)
             except Exception as e:
                 print(f"tick_callback error: {e}")
         
@@ -298,7 +299,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
                 writer = csv.writer(f)
                 writer.writerow([
                     msg.step,
-                    T_bb_cb_start, T_bb_cb_end
+                    T_bb_cb_start, T_car_tick_start, T_car_tick_end, T_bb_cb_end
                 ])
 
     
@@ -316,7 +317,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
         if self._scenario_manager is not None:
             print(f"[Evaluator ROS2] Received control_cmd")
             try:
-                T_br_cb_start, T_br_cb_end = self._scenario_manager._apply_control(self._control, msg.step)
+                T_br_cb_start, T_car_ctrl_satrt, T_car_ctrl_end, T_br_cb_end = self._scenario_manager._apply_control(self._control, msg.step)
             except Exception as e:
                 print(f"tick_callback error: {e}")
         # T_br_cb_end = time.time()
@@ -327,7 +328,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
                 writer = csv.writer(f)
                 writer.writerow([
                     msg.step,
-                    T_br_cb_start, T_br_cb_end
+                    T_br_cb_start, T_car_ctrl_satrt, T_car_ctrl_end, T_br_cb_end
                 ])
 
 class LeaderboardEvaluator(object):
@@ -608,7 +609,7 @@ class LeaderboardEvaluator(object):
             # args.agent_config = args.agent_config + '+' + save_name
             # self.agent_instance.setup(args.agent_config)
             #jw)
-            self.agent_instance = EvaluatorAgent(args.host, args.port, args.debug > 0, args.save_path)
+            self.agent_instance = EvaluatorAgent(args.host, args.port, args.debug > 0)
             
             # print("RouteScenario.gps_route:", self.route_scenario.gps_route)
             # print("RouteScenario.route:", self.route_scenario.route)
@@ -812,6 +813,7 @@ def main():
     parser.add_argument("--debug-checkpoint", type=str, default='./live_results.txt',
                         help="Path to checkpoint used for saving live results")
     parser.add_argument("--gpu-rank", type=int, default=0)
+    parser.add_argument('--save-path', default=None, help='Path to save debug outputs')
     
     arguments = parser.parse_args()
 

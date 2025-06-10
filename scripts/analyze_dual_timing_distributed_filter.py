@@ -42,7 +42,7 @@ def main(args):
     # 분석을 위한 앞쪽 step 제거 및 마지막 행 제거 (shift 영향)
     merged = merged[skip_initial_n:-1]
     
-    # merged = merged['step'] >= skip_initial_n
+    merged = merged[merged['step'] >= skip_initial_n]
 
     # 🔹 요약 출력
     metrics = [
