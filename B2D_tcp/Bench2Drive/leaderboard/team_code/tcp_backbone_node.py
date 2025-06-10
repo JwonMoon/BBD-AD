@@ -44,7 +44,7 @@ class TCPBackboneNode(Node):
         self.img_k = float(img_k) if img_k else 1.0
         self.step = 0
         self.initialized = False
-        self.wall_start = time.time()
+        self.try_proc_num = 0
 
         self.config = GlobalConfig()
         self.net = TCPBackbone(self.config)
@@ -115,7 +115,14 @@ class TCPBackboneNode(Node):
             with open(self.log_file, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
-                    'step', 'T_t_start', 'T_t_end', 'T_p_start', 'T_p_end', 'T_b_start', 'T_b_end', 'T_tx_start', 'T_tx_end', 'T_log_start', 'T_log_end'
+                    'step', 'try_proc_num', 
+                    'T_proc_start', 
+                    'T_t_start', 'T_t_end', 
+                    'T_pp_start', 'T_pp_end', 
+                    'T_bb_start', 'T_bb_end', 
+                    'T_tick_pub_start', 'T_tick_pub_end', 
+                    'T_bb_pub_start', 'T_bb_pub_end', 
+                    'T_log_start', 'T_log_end'
                 ])
 
             if self.debug_mode > 2:
@@ -189,7 +196,9 @@ class TCPBackboneNode(Node):
             self.gps_received = False
             self.imu_received = False
             self.speed_received = False
+            self.try_proc_num = 0
         else:
+            self.try_proc_num += 1
             if self.debug_mode > 1:
                 print("-----------------------------------------------")
                 print("too early to do process_step()")
@@ -366,15 +375,17 @@ class TCPBackboneNode(Node):
 
     @torch.no_grad()
     def process_step(self):
+        T_proc_start = time.time()
+        ros_time_ns = self.get_clock().now().nanoseconds # ROS2 시계 기준 시간 기록
+        
         if self.debug_mode > 1:
             self.get_logger().warning(f"[TCPBackboneNode] Process step called, step={self.step}")
 
-        # STEP 1: 전체 시간 측정 시작 / tick data
+        # STEP 1: tick
         T_t_start = time.time()
-        # time) ROS2 시계 기준 시간 기록
-        ros_time_ns = self.get_clock().now().nanoseconds
-
         tick_data = self.tick()
+        T_t_end = time.time()
+
         if tick_data is None or self.step < self.config.seq_len:
             self.get_logger().warning(f"- process_step(): No tick data or step < seq_len at step {self.step}, retutn control 0")
             rgb = self._im_transform(tick_data['rgb']).unsqueeze(0)
@@ -382,12 +393,10 @@ class TCPBackboneNode(Node):
             self.control_pub.publish(control)
             return
 
-        T_t_end = time.time()
 
-        # STEP 2: 이미지 전처리
-        T_p_start = time.time()
+        # STEP 2: input preprocessing
+        T_pp_start = time.time()
         rgb = self._im_transform(tick_data['rgb']).unsqueeze(0).to('cuda', dtype=torch.float32)
-        T_p_end = time.time()
 
         gt_velocity = torch.FloatTensor([tick_data['speed']]).to('cuda', dtype=torch.float32)
         command = tick_data['next_command']
@@ -404,13 +413,14 @@ class TCPBackboneNode(Node):
         ]
         target_point = torch.stack(tick_data['target_point'], dim=1).to('cuda', dtype=torch.float32)
         state = torch.cat([speed, target_point, cmd_one_hot], 1)
+        T_pp_end = time.time()
 
         # STEP 3: 모델 추론
         # self.get_logger().warning(f"- process_step(): backbone net()")
-        T_b_start = time.time()
+        T_bb_start = time.time()
         # break net!
         cnn_feature, measurement_feature, traj_hidden_state, backbone_outputs = self.net(rgb, state, target_point)
-        T_b_end = time.time()
+        T_bb_end = time.time()
 
         # 메시지 생성
         msg = TCPBackboneOutput()
@@ -428,10 +438,12 @@ class TCPBackboneNode(Node):
         tick_trigger_msg.step = self.step
 
         # STEP 4: Publish
-        T_tx_start = time.time()
-        T_tx_end = time.time()
+        T_tick_pub_start = time.time()
         self.tick_trigger_pub.publish(tick_trigger_msg)
+        T_tick_pub_end = time.time()
+        T_bb_pub_start = time.time()
         self.backbone_publisher.publish(msg)
+        T_bb_pub_end = time.time()
         print(f"[Backbone] Publish tick_trigger, step={self.step}")
 
 
@@ -449,10 +461,12 @@ class TCPBackboneNode(Node):
                 'command' : cmd_one_hot.view(-1).tolist(),
 
                 'ros_time_ns': ros_time_ns,
-                'image_preprocess_ms': (T_p_end - T_p_start) * 1000,
-                'backbone_inference_ms': (T_b_end - T_b_start) * 1000,
-                'publish_ms': (T_tx_end - T_b_end) * 1000,
-                'total_process_step_ms': (T_tx_end - T_t_start) * 1000
+                'tick_ms': (T_t_end - T_t_start) * 1000,
+                'preprocess_ms': (T_pp_end - T_pp_start) * 1000,
+                'backbone_inference_ms': (T_bb_end - T_bb_start) * 1000,
+                'tick_publish_ms': (T_tick_pub_start - T_tick_pub_end) * 1000,
+                'bb_publish_ms': (T_bb_pub_end - T_bb_pub_start) * 1000,
+                'total_process_step_ms': (T_bb_pub_end - T_proc_start) * 1000
             }
             
             if SAVE_PATH and self.step % 1 == 0 and self.debug_mode > 2:
@@ -463,11 +477,13 @@ class TCPBackboneNode(Node):
                 with open(self.log_file, 'a', newline='') as f:
                     writer = csv.writer(f)
                     writer.writerow([
-                        self.step,
+                        self.step, self.try_proc_num,
+                        T_proc_start,
                         T_t_start, T_t_end,
-                        T_p_start, T_p_end,
-                        T_b_start, T_b_end,
-                        T_tx_start, T_tx_end,
+                        T_pp_start, T_pp_end,
+                        T_bb_start, T_bb_end,
+                        T_tick_pub_start, T_tick_pub_end,
+                        T_bb_pub_start, T_bb_pub_end,
                         T_log_start, time.time()
                     ])
             
