@@ -212,8 +212,8 @@ class ScenarioManager(object):
         try:
             # self._agent_watchdog.resume()
             # self._agent_watchdog.update()
-            # ego_action = self._agent_wrapper()
-            print("[scenario_manager] 3. get ego_action:", ego_action)
+            # ego_action = self._agent_wrapper() # call run_step
+            print("[scenario_manager] 2. get ego_action:", ego_action)
             # self._agent_watchdog.pause()
 
         # Special exception inside the agent that isn't caused by the agent
@@ -224,8 +224,10 @@ class ScenarioManager(object):
             raise AgentError(e)
 
         # self._watchdog.resume()
-        print("[scenario_manager] 4. apply control")
+        print("[scenario_manager] 3. apply control")
+        carla_control_start_time = time.time()
         self.ego_vehicles[0].apply_control(ego_action)
+        carla_control_end_time = time.time()
 
         # Tick scenario. Add the ego control to the blackboard in case some behaviors want to change it
         py_trees.blackboard.Blackboard().set("AV_control", ego_action, overwrite=True)
@@ -264,15 +266,18 @@ class ScenarioManager(object):
                                                         carla.Rotation(pitch=-90)))
     
         # tick_simulatrion
+        print(f"self._running = {self._running}")
+        print(f"self.get_running_status() = {self.get_running_status()}")
+
         if self._running and self.get_running_status():
             # CarlaDataProvider.get_world().tick(self._timeout)
-            
             #jw) debug
             print(f"CarlaDataProvider.get_world().tick(self._timeout)")
+            carla_tick_start_time = time.time() 
             CarlaDataProvider.get_world().tick(self._timeout)
-        tick_end_time = time.time()
+            carla_tick_end_time = time.time() 
 
-        print("[scenario_manager] 2. carla get snapshot()")
+        print("[scenario_manager] 4. carla get snapshot()")
         timestamp = CarlaDataProvider.get_world().get_snapshot().timestamp
 
         if self._timestamp_last_run < timestamp.elapsed_seconds and self._running:
@@ -288,7 +293,8 @@ class ScenarioManager(object):
             if self.tick_count > 4000:
                 raise TickRuntimeError("RuntimeError, tick_count > 4000")
            
-        return tick_start_time, tick_end_time
+        tick_end_time = time.time()
+        return tick_start_time, carla_control_start_time, carla_control_end_time, carla_tick_start_time, carla_tick_end_time, tick_end_time
 
     def get_running_status(self):
         """
@@ -296,7 +302,10 @@ class ScenarioManager(object):
            bool: False if watchdog exception occured, True otherwise
         """
         if self._watchdog:
-            return self._watchdog.get_status()
+            # return self._watchdog.get_status()
+            status = self._watchdog.get_status()
+            print(f"[ScenarioManager] get_running_status() -> {status}")
+            return status
         return True
 
     def stop_scenario(self):

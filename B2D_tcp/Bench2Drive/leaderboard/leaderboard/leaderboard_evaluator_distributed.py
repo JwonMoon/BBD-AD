@@ -48,8 +48,7 @@ from leaderboard.autoagents.autonomous_agent import AutonomousAgent
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, DurabilityPolicy
-from carla_msgs.msg import CarlaEgoVehicleControl, CarlaRoute, CarlaGnssRoute
-# from carla_msgs.srv import SpawnObject, DestroyObject
+from carla_msgs.msg import CarlaRoute, CarlaGnssRoute
 from diagnostic_msgs.msg import KeyValue
 from geometry_msgs.msg import Point, Pose, Quaternion
 from sensor_msgs.msg import NavSatFix
@@ -274,24 +273,19 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             print("[EvaluatorAgent] No control received in time. Returning default VehicleControl.")
             return carla.VehicleControl()  # 기본적으로 멈춘 상태
 
-        # #jw) ros node
-        # while self._control is None:
-        #     rclpy.spin_once(self, timeout_sec=0.01)
-
-        # control = self._control
-        # self._control = None
-        # return control
-
     def _tick_trigger_callback(self, msg):
+        T_bb_cb_start = time.time()
         if self._is_agent_ready is False:
-            print(f"[Evaluator ROS2] set _is_agent_ready True, step={msg.step}")
+            print(f"[EvaluatorAgent] set _is_agent_ready True, step={msg.step}")
             self._is_agent_ready = True
         if msg.trigger and self._scenario_manager is not None:
-            print(f"[Evaluator ROS2] Received tick trigger, step={msg.step}")
+            print(f"[EvaluatorAgent] Received tick trigger, step={msg.step}")
             try:
-                T_bb_cb_start, T_car_tick_start, T_car_tick_end, T_bb_cb_end = self._scenario_manager._tick_simulation(msg.step)
+                # T_bb_cb_start, T_car_tick_start, T_car_tick_end, T_bb_cb_end = self._scenario_manager._tick_simulation(msg.step)
+                T_car_tick_start, T_car_tick_end = self._scenario_manager._tick_simulation(msg.step)
             except Exception as e:
                 print(f"tick_callback error: {e}")
+        T_bb_cb_end = time.time()
         
         # timing log 저장
         if self.log_file_bb:
@@ -302,9 +296,8 @@ class EvaluatorAgent(Node, ROSBaseAgent):
                     T_bb_cb_start, T_car_tick_start, T_car_tick_end, T_bb_cb_end
                 ])
 
-    
     def _vehicle_control_cmd_callback(self, msg):
-        # T_br_cb_start = time.time()
+        T_br_cb_start = time.time()
         self._control = carla.VehicleControl(
             steer=msg.steer, 
             throttle=msg.throttle, 
@@ -315,12 +308,13 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             gear=msg.gear
         )
         if self._scenario_manager is not None:
-            print(f"[Evaluator ROS2] Received control_cmd")
+            print(f"[EvaluatorAgent] Received control_cmd")
             try:
-                T_br_cb_start, T_car_ctrl_satrt, T_car_ctrl_end, T_br_cb_end = self._scenario_manager._apply_control(self._control, msg.step)
+                # T_br_cb_start, T_car_ctrl_satrt, T_car_ctrl_end, T_br_cb_end = self._scenario_manager._apply_control(self._control, msg.step)
+                T_car_ctrl_satrt, T_car_ctrl_end = self._scenario_manager._apply_control(self._control, msg.step)
             except Exception as e:
                 print(f"tick_callback error: {e}")
-        # T_br_cb_end = time.time()
+        T_br_cb_end = time.time()
 
         # timing log 저장
         if self.log_file_br:
@@ -678,7 +672,7 @@ class LeaderboardEvaluator(object):
                     rclpy.spin_once(self.agent_instance, timeout_sec=0.01)
                     # print("\033[1m>>> >>> carla tick before run_scenario\033[0m", flush=True)
                     CarlaDataProvider.get_world().tick()
-                    time.sleep(0.5)
+                    # time.sleep(0.1)
             rclpy.spin(self.agent_instance)
 
         except AgentError:

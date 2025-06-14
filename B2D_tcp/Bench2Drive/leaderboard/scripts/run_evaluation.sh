@@ -29,7 +29,7 @@ export CHECKPOINT_ENDPOINT=${7}
 export SAVE_PATH=${8}
 export HOST=${11} #jw
 # export DEBUG_CHALLENGE=0
-export DEBUG_CHALLENGE=${12} #jw
+export DEBUG_MODE=${12} #jw
 
 
 # echo "PORT=$PORT"
@@ -57,7 +57,7 @@ CUDA_VISIBLE_DEVICES=${GPU_RANK} python ${LEADERBOARD_ROOT}/leaderboard/leaderbo
 --track=${CHALLENGE_TRACK_CODENAME} \
 --checkpoint=${CHECKPOINT_ENDPOINT} \
 --agent=${TEAM_AGENT} \
---debug=${DEBUG_CHALLENGE} \
+--debug=${DEBUG_MODE} \
 --record=${RECORD_PATH} \
 --resume=${RESUME} \
 --port=${PORT} \
