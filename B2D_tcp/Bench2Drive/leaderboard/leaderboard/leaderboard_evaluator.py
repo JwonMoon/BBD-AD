@@ -49,8 +49,7 @@ from leaderboard.autoagents.autonomous_agent import AutonomousAgent
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, DurabilityPolicy
-from carla_msgs.msg import CarlaEgoVehicleControl, CarlaRoute, CarlaGnssRoute
-from carla_msgs.srv import SpawnObject, DestroyObject
+from carla_msgs.msg import CarlaRoute, CarlaGnssRoute
 from diagnostic_msgs.msg import KeyValue
 from geometry_msgs.msg import Point, Pose, Quaternion
 from sensor_msgs.msg import NavSatFix
@@ -129,25 +128,12 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             with open(self.log_file, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
-                    'step', 'T_tick_start', 'T_tick_end'
+                    'step', 'T_tick_start', 
+                    'T_car_ctrl_start', 'T_car_ctrl_end', 
+                    'T_car_tick_start', 'T_car_tick_end', 
+                    'T_tick_end'
                 ])
-    
-    # def sensors(self):
-    #     return [
-    #         {'type': 'sensor.camera.rgb', 'x': 0.80, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-    #          'width': 1600, 'height': 900, 'fov': 70, 'id': 'CAM_FRONT', 'sensor_tick': 0.1},
-    #         {'type': 'sensor.camera.rgb', 'x': 0.27, 'y': -0.55, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': -55.0,
-    #          'width': 1600, 'height': 900, 'fov': 70, 'id': 'CAM_FRONT_LEFT', 'sensor_tick': 0.1},
-    #         {'type': 'sensor.camera.rgb', 'x': 0.27, 'y': 0.55, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 55.0,
-    #          'width': 1600, 'height': 900, 'fov': 70, 'id': 'CAM_FRONT_RIGHT', 'sensor_tick': 0.1},
-    #         {'type': 'sensor.other.imu', 'x': -1.4, 'y': 0.0, 'z': 0.0, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-    #          'sensor_tick': 0.05, 'id': 'IMU'},
-    #         {'type': 'sensor.other.gnss', 'x': -1.4, 'y': 0.0, 'z': 0.0, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-    #          'sensor_tick': 0.1, 'id': 'GPS'}, #jw) 0.01 -> 0.1
-    #         {'type': 'sensor.speedometer', 'reading_frequency': 20, 'id': 'SPEED'},
-    #         {'type': 'sensor.camera.rgb', 'x': 0.0, 'y': 0.0, 'z': 2.5, 'roll': 0.0, 'pitch': -90.0, 'yaw': 0.0,
-    #          'width': 512, 'height': 512, 'fov': 50.0, 'id': 'bev', 'sensor_tick': 0.1}
-    #     ]
+
     def sensors(self): #original
 	    return [
 				{
@@ -230,53 +216,6 @@ class EvaluatorAgent(Node, ROSBaseAgent):
     def get_ros_version():
         return EvaluatorAgent.ROS_VERSION
     
-    # def spawn_object(self, type_, id_, transform, attributes, attach_to=0):
-    #     spawn_point = BridgeHelper.carla2ros_pose(
-    #         transform.location.x, transform.location.y, transform.location.z,
-    #         transform.rotation.roll, transform.rotation.pitch, transform.rotation.yaw,
-    #         to_quat=True
-    #     )
-    #     request = SpawnObject.Request()
-    #     request.type = type_
-    #     request.id = id_
-    #     request.attach_to = attach_to
-    #     request.transform = Pose(position=Point(**spawn_point["position"]), orientation=Quaternion(**spawn_point["orientation"]))
-    #     request.random_pose = False
-    #     request.attributes.extend([
-    #         KeyValue(key=str(k), value=str(v)) for k,v in attributes.items()
-    #     ])
-
-    #     # Call the service synchronously.
-    #     self.get_logger().info(f"Attempting to spawn {type_} with id {id_}")
-    #     # response = self._spawn_object_service.call(request)
-    #     # if response.id == -1:
-    #     #     self.get_logger().error(f"Failed to spawn {type_}: {response.error_string}") #debug
-    #     #     raise RuntimeError("{} could not be spawned. {}".format(type_, response["error_string"]))
-    #     # self.get_logger().info(f"Spawned {type_} with id {response.id}") #debug
-    #     # return response.id
-        
-    #     #jw) debug
-    #     try:
-    #         response = self._spawn_object_service.call(request)
-    #         if response.id == -1:
-    #             self.get_logger().error(f"Failed to spawn {type_}: {response.error_string}")
-    #         else:
-    #             self.get_logger().info(f"Spawned {type_} with id {response.id}")
-    #         return response.id
-    #     except Exception as e:
-    #         self.get_logger().error(f"Spawn object failed: {str(e)}")
-    #         return -1
-
-    # def destroy_object(self, uid):
-    #     request = DestroyObject.Request()
-    #     request.id = uid
-    #     # Call the servive syncrhonoulsy
-    #     response = self._destroy_object_service.call(request)
-    #     if not response.success:
-    #         self.get_logger().error(f"Failed to destroy {uid}")
-    #         raise RuntimeError("{} could not be destroyed".format(uid))
-    #     return response.success
-    
     def destroy(self):
         self.get_logger().info("Destroying EvaluatorAgent")
         # super().destroy()
@@ -330,14 +269,6 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             print("[EvaluatorAgent] No control received in time. Returning default VehicleControl.")
             return carla.VehicleControl()  # 기본적으로 멈춘 상태
 
-        # #jw) ros node
-        # while self.control is None:
-        #     rclpy.spin_once(self, timeout_sec=0.01)
-
-        # control = self.control
-        # self.control = None
-        # return control
-
     def _vehicle_control_cmd_callback(self, msg):
         if self.is_agent_ready is False:
             self.is_agent_ready = True
@@ -355,7 +286,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
         if self._scenario_manager is not None:
             print(f"[Evaluator ROS2] Received control_cmd")
             try:
-                T_tick_start, T_tick_end = self._scenario_manager._tick_scenario(self.control)
+                T_tick_start, T_car_ctrl_start, T_car_ctrl_end, T_car_tick_start, T_car_tick_end,T_tick_end = self._scenario_manager._tick_scenario(self.control)
             except Exception as e:
                 print(f"tick_callback error: {e}")
 
@@ -365,7 +296,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
                 writer = csv.writer(f)
                 writer.writerow([
                     msg.step,
-                    T_tick_start, T_tick_end
+                    T_tick_start, T_car_ctrl_start, T_car_ctrl_end, T_car_tick_start, T_car_tick_end, T_tick_end
                 ])
 
         # if hasattr(self, '_scenario_manager'):
@@ -704,6 +635,10 @@ class LeaderboardEvaluator(object):
             self.manager.load_scenario(self.route_scenario, self.agent_instance, config.index, config.repetition_index)
             self.manager.tick_count = 0
             
+
+            print(f"\033[1m>>> >>> self.agent_instance.is_agent_ready: {self.agent_instance.is_agent_ready}\033[0m", flush=True)
+            print("\033[1m>>> run_scenario\033[0m", flush=True)
+            self.manager.run_scenario()
             # jw) orin-warm-up
             while True:
                 if self.agent_instance.is_agent_ready is True:
@@ -713,10 +648,7 @@ class LeaderboardEvaluator(object):
                     rclpy.spin_once(self.agent_instance, timeout_sec=0.01)
                     # print("\033[1m>>> >>> carla tick before run_scenario\033[0m", flush=True)
                     CarlaDataProvider.get_world().tick()
-
-            print(f"\033[1m>>> >>> self.agent_instance.is_agent_ready: {self.agent_instance.is_agent_ready}\033[0m", flush=True)
-            print("\033[1m>>> run_scenario\033[0m", flush=True)
-            self.manager.run_scenario()
+                    # time.sleep(0.1)
             rclpy.spin(self.agent_instance)
 
         except AgentError:
