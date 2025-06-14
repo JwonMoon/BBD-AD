@@ -430,11 +430,11 @@ class TCPAgentNode(Node):
         steer_traj, throttle_traj, brake_traj, metadata_traj = self.net.control_pid(pred['pred_wp'], gt_velocity, target_point)
         T_pid_end = time.time()
 
-        # self.get_logger().info(f"gt_velocity: {gt_velocity}")
-        # self.get_logger().info(f"target_point: {target_point}")
-        # self.get_logger().info(f"pred_wp.cpu().numpy(): {pred['pred_wp'].cpu().numpy()}")
-        # self.get_logger().info(f"steer_ctrl: {steer_ctrl}, throttle_ctrl: {throttle_ctrl}, brake_ctrl: {brake_ctrl}") #debug
-        # self.get_logger().info(f"steer_traj: {steer_traj}, throttle_traj: {throttle_traj}, brake_traj: {brake_traj}") #debug
+        # self.get_logger().info(f"[DEBUG] gt_velocity: {gt_velocity}")
+        # self.get_logger().info(f"[DEBUG] target_point: {target_point}")
+        # self.get_logger().info(f"[DEBUG] pred_wp.cpu().numpy(): {pred['pred_wp'].cpu().numpy()}")
+        # self.get_logger().info(f"[DEBUG] steer_ctrl: {steer_ctrl}, throttle_ctrl: {throttle_ctrl}, brake_ctrl: {brake_ctrl}")
+        # self.get_logger().info(f"[DEBUG] steer_traj: {steer_traj}, throttle_traj: {throttle_traj}, brake_traj: {brake_traj}")
 
         # STEP 4: 제어 명령 생성 및 publish
         # self.get_logger().warning(f"- process_step(): generate control")
@@ -459,9 +459,9 @@ class TCPAgentNode(Node):
             control.steer = np.clip(alpha * steer_traj + (1 - alpha) * steer_ctrl, -1, 1)
             control.throttle = np.clip(alpha * throttle_traj + (1 - alpha) * throttle_ctrl, 0, 0.75)
             control.brake = max(np.clip(float(brake_ctrl), 0, 1), np.clip(float(brake_traj), 0, 1))
-            # self.get_logger().warning(f"[debug1] steer={control.steer}") #debug
-            # self.get_logger().warning(f"[debug2] throttle={control.throttle}") #debug
-            # self.get_logger().warning(f"[debug3] brake={control.brake}") #debug
+            # self.get_logger().warning(f"[DEBUG] steer={control.steer}") 
+            # self.get_logger().warning(f"[DEBUG] throttle={control.throttle}") 
+            # self.get_logger().warning(f"[DEBUG] brake={control.brake}") 
         
         # self.get_logger().warning(f"- process_step(): clipping")
         if abs(control.steer) > 0.07:   ## In turning
