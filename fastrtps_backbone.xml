@@ -21,19 +21,34 @@
         <userTransports>
           <transport_id>udp_transport</transport_id>
         </userTransports>
-	<builtin>
-	  <avoid_builtin_multicast>true</avoid_builtin_multicast> <!-- 🔒 멀티캐스트 비활성화 -->
-          <metatrafficUnicastLocatorList>
-		<locator address="192.168.10.1" port="7400"/>
-		<locator address="192.168.20.2" port="7400"/>
-          </metatrafficUnicastLocatorList>
-          <metatrafficMulticastLocatorList>
-            <locator address="0.0.0.0" port="7401"/>
-          </metatrafficMulticastLocatorList>
-	</builtin>
-        <sendSocketBufferSize>8388608</sendSocketBufferSize>
-        <listenSocketBufferSize>8388608</listenSocketBufferSize>
+        <builtin>
+          <avoid_builtin_multicast>true</avoid_builtin_multicast> <!-- 🔒 멀티캐스트 비활성화 -->
+                <metatrafficUnicastLocatorList>
+          <locator address="192.168.10.1" port="7400"/>
+          <locator address="192.168.20.2" port="7400"/>
+                </metatrafficUnicastLocatorList>
+                <metatrafficMulticastLocatorList>
+                  <locator address="0.0.0.0" port="7401"/>
+                </metatrafficMulticastLocatorList>
+        </builtin>
+          <sendSocketBufferSize>8388608</sendSocketBufferSize>
+          <listenSocketBufferSize>8388608</listenSocketBufferSize>
       </rtps>
+<!--       
+      <topic_filter>
+          <allow>
+            <topic>/carla/hero/GPS</topic>
+            <topic>/carla/hero/IMU</topic>
+            <topic>/carla/hero/vehicle_status</topic>
+            <topic>/carla/hero/global_plan_gps</topic>
+            <topic>/carla/hero/global_plan</topic>
+            <topic>/image/compressed</topic>
+            <topic>/image_left/compressed</topic>
+            <topic>/image_right/compressed</topic>
+            <topic>/tcp/backbone_output</topic>
+            <topic>/tcp/tick_trigger</topic>
+        </allow>
+      </topic_filter> -->
     </participant>
 
   </profiles>

@@ -7,7 +7,6 @@ import time
 import cv2
 import math
 from collections import OrderedDict
-import csv
 
 import torch
 import numpy as np
@@ -25,6 +24,7 @@ from carla_msgs.msg import CarlaEgoVehicleControl
 from tf_transformations import euler_from_quaternion
 from TCP.model_branch import TCPBranch
 from tcp_msgs.msg import TCPBackboneOutput, TCPBranchOutput
+import csv
 
 SAVE_PATH = os.environ.get('SAVE_PATH', None)
 PLANNER_TYPE = os.environ.get('PLANNER_TYPE', None)
@@ -38,7 +38,7 @@ class TCPBranchNode(Node):
         self.ckpt_path = ckpt_path
         # self.save_path = save_path if save_path else '/root/shared_dir/B2D_Demo/B2D_tcp/Bench2Drive/eval_v1/'
         self.debug_mode = int(debug_mode)
-        self.step = -1
+        self.step = 0
 
         self.config = GlobalConfig()
         self.net = TCPBranch(self.config)
@@ -61,16 +61,21 @@ class TCPBranchNode(Node):
 
         if (self.debug_mode > 0) and SAVE_PATH:
             now = datetime.datetime.now()
-            string = f"tcp_agent_{now.strftime('%m_%d_%H_%M_%S')}"
+            string = f"tcp_branch_{now.strftime('%m_%d_%H_%M_%S')}"
             self.save_path = pathlib.Path(SAVE_PATH) / string
             self.save_path.mkdir(parents=True, exist_ok=True)
-            # timing
+            
             (self.save_path / 'meta_branch').mkdir()
             self.log_file = self.save_path / 'branch_timing.csv'
             with open(self.log_file, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
-                    'step', 'T_cb_start', 'T_rx_start', 'T_rx_end', 'T_br_start', 'T_br_end', 'T_pid_start', 'T_pid_end', 'T_pub_start', 'T_pub_end', 'T_log_start', 'T_log_end'
+                    'step', 'T_cb_start', 
+                    'T_rx_start', 'T_rx_end', 
+                    'T_br_start', 'T_br_end', 
+                    'T_pid_start', 'T_pid_end', 
+                    'T_pub_start', 'T_pub_end', 
+                    'T_log_start', 'T_log_end'
                 ])
 
     def backbone_callback(self, msg):
@@ -80,7 +85,7 @@ class TCPBranchNode(Node):
         if self.debug_mode > 1:
             self.get_logger().warning(f"[TCPBranchNode] Process step called, step={self.step}")
 
-        # timing
+        # STEP 1: rx backbone output msg
         T_rx_start = time.time()
 
         self.step = msg.step
@@ -98,7 +103,7 @@ class TCPBranchNode(Node):
         
         T_rx_end = time.time()
         
-        # Inference
+        # STEP 2: 모델 추론
         # self.get_logger().warning(f"- backbone_callback(): branch net()")
         T_br_start = time.time()
         # break net!
@@ -155,15 +160,12 @@ class TCPBranchNode(Node):
         else:
             max_throttle = 0.5
         control.throttle = np.clip(control.throttle, a_min=0.0, a_max=max_throttle)
-        # self.get_logger().warning(f"[DEBUG] throttle={control.throttle}")
 
         if control.brake > 0:
             control.brake = 1.0
         if control.brake > 0.5:
             control.throttle = 0.0
-        # self.get_logger().warning(f"[DEBUG] brake={control.brake}")
 
-        # self.get_logger().warning(f"- backbone_callback(): control_pub()")
         # self.get_logger().warning(f"[TCPBranchNode] Published control: steer={control.steer:.3f}, throttle={control.throttle:.3f}, brake={control.brake:.3f}")
         control.step = self.step
 
@@ -181,6 +183,7 @@ class TCPBranchNode(Node):
                 'traj_hidden_state': traj_hidden_state.view(-1).tolist()[:10],
                 
                 'ros_time_ns': ros_time_ns,
+                'rx_bb_ms': (T_rx_start -T_rx_start) * 1000,
                 'branch_inference_ms': (T_br_end -T_br_start) * 1000,
                 'pid_calc_ms': (T_pid_end - T_pid_start) * 1000,
                 'publish_ms': (T_pub_end - T_pub_start) * 1000,
@@ -226,16 +229,12 @@ class TCPBranchNode(Node):
         torch.cuda.empty_cache()
         self.get_logger().info("TCP Agent Node destroyed")
         
-        #jw) todo: 최종 결과 출력
-
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='TCP Agent Node for CARLA')
     parser.add_argument('--ckpt-path', required=True, help='Path to model checkpoint')
     parser.add_argument('--save-path', default=None, help='Path to save debug outputs')
     parser.add_argument('--debug-mode', type=int, default=0, help='Level of debug mode')
-    # parser.add_argument('--img-input', default='raw', help='Type for input camera image')
-    # parser.add_argument('--img-k', type=float, default=1.0, help='Input camera image resolution ratio')
     args = parser.parse_args()
 
     rclpy.init()
