@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # 1. 명령줄 인자 처리
 if len(sys.argv) != 4:
-    print("usage: python draw_smoothing.py <log file> <output file> <window_size>")
+    print("usage: python draw_gpu_cpu_smoothing.py <log file> <output file> <window_size>")
     sys.exit(1)
 
 log_file = sys.argv[1]  

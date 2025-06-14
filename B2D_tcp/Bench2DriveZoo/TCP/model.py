@@ -200,7 +200,7 @@ class TCP(nn.Module):
 		feature_emb, cnn_feature = self.perception(img)
 		
 		t1 = time.perf_counter()
-		print(f"[TCP] CNN backbone: {(t1 - t0) * 1000:.2f} ms")
+		# print(f"[TCP] CNN backbone: {(t1 - t0) * 1000:.2f} ms")
 		timing['cnn_ms'] = (t1 - t0) * 1000
 		
 		outputs = {}
@@ -208,7 +208,7 @@ class TCP(nn.Module):
 		measurement_feature = self.measurements(state)
 		
 		t2 = time.perf_counter()
-		print(f"[TCP] State MLP: {(t2 - t1) * 1000:.2f} ms")
+		# print(f"[TCP] State MLP: {(t2 - t1) * 1000:.2f} ms")
 		timing['state_mlp_ms'] = (t2 - t1) * 1000
 
 		j_traj = self.join_traj(torch.cat([feature_emb, measurement_feature], 1))
@@ -219,7 +219,7 @@ class TCP(nn.Module):
 		traj_hidden_state = list()
 		
 		t3 = time.perf_counter()
-		print(f"[TCP] Traj branch: {(t3 - t2) * 1000:.2f} ms")
+		# print(f"[TCP] Traj branch: {(t3 - t2) * 1000:.2f} ms")
 		timing['traj_branch_ms'] = (t3 - t2) * 1000	
 
 		# initial input variable to GRU
@@ -247,7 +247,7 @@ class TCP(nn.Module):
 		outputs['action_index'] = self.action_head(policy)
 
 		t4 = time.perf_counter()
-		print(f"[TCP] Ctrl branch: {(t4 - t3) * 1000:.2f} ms")
+		# print(f"[TCP] Ctrl branch: {(t4 - t3) * 1000:.2f} ms")
 		timing['ctrl_branch_ms'] = (t4 - t3) * 1000
 
 		x = j_ctrl

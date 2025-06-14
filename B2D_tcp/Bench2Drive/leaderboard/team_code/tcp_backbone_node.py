@@ -14,7 +14,8 @@ import numpy as np
 from PIL import Image as PILImage
 from torchvision import transforms as T
 
-from TCP.model import TCP
+# from TCP.model import TCP
+from TCP.model_backbone import TCPBackbone
 from TCP.config import GlobalConfig
 from team_code.planner import RoutePlanner
 from scipy.optimize import fsolve
@@ -25,20 +26,19 @@ from rclpy.qos import QoSProfile, DurabilityPolicy
 from sensor_msgs.msg import Image, NavSatFix, Imu, CompressedImage
 from carla_msgs.msg import CarlaEgoVehicleControl, CarlaRoute, CarlaEgoVehicleStatus, CarlaGnssRoute
 from tf_transformations import euler_from_quaternion
-from tcp_msgs.msg import TCPBranchOutput
+from tcp_msgs.msg import TCPBackboneOutput, TickTrigger
 import csv
 
 SAVE_PATH = os.environ.get('SAVE_PATH', None)
-PLANNER_TYPE = os.environ.get('PLANNER_TYPE', None)
 
 EARTH_RADIUS_EQUA = 6378137.0
 
-class TCPAgentNode(Node):
+class TCPBackboneNode(Node):
     def __init__(self, ckpt_path, save_path, debug_mode, img_input, img_k):
-        super().__init__('tcp_agent_node')
+        super().__init__('tcp_backbone_node')
 
         self.ckpt_path = ckpt_path
-        # self.save_path = save_path if save_path else '/tmp/tcp_agent'
+        # self.save_path = save_path if save_path else '/root/shared_dir/B2D_Demo/B2D_tcp/Bench2Drive/eval_v1/'
         self.debug_mode = debug_mode
         self.img_input = img_input if img_input else 'raw'
         self.img_k = float(img_k) if img_k else 1.0
@@ -47,7 +47,7 @@ class TCPAgentNode(Node):
         self.try_proc_num = 0
 
         self.config = GlobalConfig()
-        self.net = TCP(self.config)
+        self.net = TCPBackbone(self.config)
 
         ckpt = torch.load(self.ckpt_path, map_location="cuda", weights_only=True)
         ckpt = ckpt["state_dict"]
@@ -101,28 +101,39 @@ class TCPAgentNode(Node):
         self.create_subscription(CarlaEgoVehicleStatus, '/carla/hero/vehicle_status', self.vehicle_status_callback, 1)
         self.create_subscription(CarlaGnssRoute, '/carla/hero/global_plan_gps', self.global_plan_gps_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(CarlaRoute, '/carla/hero/global_plan', self.global_plan_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
-
-        self.control_pub = self.create_publisher(TCPBranchOutput, '/tcp/vehicle_control_cmd', QoSProfile(depth=1))
+        
+        self.backbone_publisher = self.create_publisher(TCPBackboneOutput, '/tcp/backbone_output', QoSProfile(depth=1))
+        self.tick_trigger_pub = self.create_publisher(TickTrigger, '/tcp/tick_trigger', 1)
 
         if self.debug_mode > 0 and SAVE_PATH:
             now = datetime.datetime.now()
-            string = f"tcp_agent_{now.strftime('%m_%d_%H_%M_%S')}"
+            string = f"tcp_backbone_{now.strftime('%m_%d_%H_%M_%S')}"
             self.save_path = pathlib.Path(SAVE_PATH) / string
             self.save_path.mkdir(parents=True, exist_ok=True)
-
-            (self.save_path / 'meta').mkdir()
-            self.log_file = self.save_path / 'tcp_timing.csv'
+            
+            (self.save_path / 'meta_backbone').mkdir()
+            self.log_file = self.save_path / 'backbone_timing.csv'
             with open(self.log_file, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
                     'step', 'try_proc_num', 
-                    'T_proc_start',
+                    'T_proc_start', 
                     'T_t_start', 'T_t_end', 
-                    'T_pp_start', 'T_pp_end', 
-                    'T_net_start', 'T_net_end', 
-                    'T_pid_start', 'T_pid_end', 
-                    'T_gen_msg_start', 'T_gen_msg_end', 
-                    'T_pub_start', 'T_pub_end', 
+                    'T_pp_start', 
+                    'T_rgb_start',
+                    'T_im_trans_start', 'T_im_trans_end',
+                    'T_tocuda_start', 'T_tocuda_end',
+                    'T_rgb_end',
+                    'T_one_hot_start', 'T_one_hot_end',
+                    'T_tick_start', 'T_tick_end',
+                    'T_stack_start', 'T_stack_end',
+                    'T_state_start', 'T_state_end',
+                    'T_pp_end', 
+                    'T_bb_start', 'T_bb_end', 
+                    'T_tx_tick_start', 'T_tx_tick_end', 
+                    'T_tick_pub_start', 'T_tick_pub_end', 
+                    'T_tx_bb_start', 'T_tx_bb_end', 
+                    'T_bb_pub_start', 'T_bb_pub_end', 
                     'T_log_start', 'T_log_end'
                 ])
 
@@ -260,7 +271,7 @@ class TCPAgentNode(Node):
         # print(f"[DEBUG] First global_plan_gps point: lon={self._global_plan_gps[0][0]['lon']}, lat={self._global_plan_gps[0][0]['lat']}")
         self.try_process_step()
 
-    def _init(self):
+    def _init(self):  
         if self.global_plan_received is False or self.global_plan_gps_received is False:
             return
 
@@ -280,7 +291,7 @@ class TCPAgentNode(Node):
             print(e, flush=True)
             self.lat_ref, self.lon_ref = 0, 0
         # print(f"[_init()] lat_ref: {self.lat_ref}, lon_ref: {self.lon_ref}, save_path: {self.save_path}")
-        #
+
         self._route_planner = RoutePlanner(4.0, 50.0, lat_ref=self.lat_ref, lon_ref=self.lon_ref)
         # self._route_planner.set_route(self._global_plan, False)
         self._route_planner.set_route(self._global_plan_gps, True)
@@ -326,7 +337,7 @@ class TCPAgentNode(Node):
 
     def tick(self):
         self.step += 1
-        
+
         if self.debug_mode > 1:
             self.get_logger().info(f"[TCPBackboneNode] Tick called, GPS={self.gps}, step={self.step}") #debug
         if not all([self.rgb_front is not None, self.rgb_front_left is not None, self.rgb_front_right is not None, self.initialized]):
@@ -362,7 +373,6 @@ class TCPAgentNode(Node):
         # print(f"[DEBUG] Next WP: x={next_wp[0]}, y={next_wp[1]}")
         # print(f"[DEBUG] Distance to WP: dx={next_wp[0]-gps[0]}, dy={next_wp[1]-gps[1]}")
         # print(f"[DEBUG] next_cmd: {next_cmd}")
-        # self.get_logger().info(f"- tick(): Next waypoint: {next_wp}, cmd: {next_cmd}")    #debug
 
         theta = imu - np.pi / 2
         R = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), np.cos(theta)]])
@@ -371,17 +381,17 @@ class TCPAgentNode(Node):
         result['target_point'] = tuple(local_command_point)
         # print(f"[DEBUG] Local target_point (vehicle frame): x={local_command_point[0]:.3f}, y={local_command_point[1]:.3f}")
         if self.debug_mode > 1:
-            self.get_logger().info(f"Tick finished, step={self.step}") #debug
-        
+            self.get_logger().info(f"Tick finished, step={self.step}") #debug        
+
         return result
 
     @torch.no_grad()
     def process_step(self):
         T_proc_start = time.time()
         ros_time_ns = self.get_clock().now().nanoseconds # ROS2 시계 기준 시간 기록
-
+        
         if self.debug_mode > 1:
-            self.get_logger().warning(f"Process step called, step={self.step}")
+            self.get_logger().warning(f"[TCPBackboneNode] Process step called, step={self.step}")
 
         # STEP 1: tick
         T_t_start = time.time()
@@ -391,15 +401,33 @@ class TCPAgentNode(Node):
         if tick_data is None or self.step < self.config.seq_len:
             self.get_logger().warning(f"- process_step(): No tick data or step < seq_len at step {self.step}, retutn control 0")
             rgb = self._im_transform(tick_data['rgb']).unsqueeze(0)
-            control = TCPBranchOutput()
+            control = CarlaEgoVehicleControl()
             self.control_pub.publish(control)
             return
 
-
         # STEP 2: input preprocessing
         T_pp_start = time.time()
-        rgb = self._im_transform(tick_data['rgb']).unsqueeze(0).to('cuda', dtype=torch.float32)
+        T_rgb_start = time.time()
+        # rgb = self._im_transform(tick_data['rgb']).unsqueeze(0).to('cuda', dtype=torch.float32)
+        
+        # 1. 이미지 정규화 및 텐서 변환 (HWC → CHW, float, 정규화)
+        # 2. 배치 차원 추가 (→ shape: (1, 3, H, W))
+        T_im_trans_start = time.time()
+        rgb_tensor = self._im_transform(tick_data['rgb']).unsqueeze(0)  # shape: (3, H, W), dtype: float32, normalized
+        T_im_trans_end = time.time()
+        
+        T_tocuda_start = time.time()
+        # 3. GPU로 이동 + dtype 변환
+        rgb_tensor = rgb_tensor.to('cuda', dtype=torch.float32)
+        # torch.cuda.synchronize() #GPU 연산 완료를 강제로 기다리고 측정
+        T_tocuda_end = time.time()
 
+        # 최종 변수 할당
+        rgb = rgb_tensor
+
+        T_rgb_end = time.time()
+
+        T_one_hot_start = time.time()
         gt_velocity = torch.FloatTensor([tick_data['speed']]).to('cuda', dtype=torch.float32)
         command = tick_data['next_command']
         command = 4 if command < 0 else command - 1
@@ -407,108 +435,82 @@ class TCPAgentNode(Node):
         cmd_one_hot = [0] * 6
         cmd_one_hot[command] = 1
         cmd_one_hot = torch.tensor(cmd_one_hot).view(1, 6).to('cuda', dtype=torch.float32)
+        T_one_hot_end = time.time()
 
+        T_tick_start = time.time()
         speed = torch.FloatTensor([float(tick_data['speed'])]).view(1, 1).to('cuda', dtype=torch.float32) / 12
         tick_data['target_point'] = [
             torch.FloatTensor([tick_data['target_point'][0]]),
             torch.FloatTensor([tick_data['target_point'][1]])
         ]
+        T_tick_end = time.time()
+
+        T_stack_start = time.time()
         target_point = torch.stack(tick_data['target_point'], dim=1).to('cuda', dtype=torch.float32)
+        T_stack_end = time.time()
+
+        T_state_start = time.time()
         state = torch.cat([speed, target_point, cmd_one_hot], 1)
+        T_state_end = time.time()
+
         T_pp_end = time.time()
 
-        # STEP 2: 모델 추론
-        # self.get_logger().warning(f"- process_step(): net()")
-        T_net_start = time.time()
-        pred = self.net(rgb, state, target_point)
-        T_net_end = time.time()
+        # STEP 3: 모델 추론
+        # self.get_logger().warning(f"- process_step(): backbone net()")
+        T_bb_start = time.time()
+        # break net!
+        cnn_feature, measurement_feature, traj_hidden_state, backbone_outputs = self.net(rgb, state, target_point)
+        T_bb_end = time.time()
 
-        # STEP 3: PID 계산
-        # self.get_logger().warning(f"- process_step(): control_pid()")
-        T_pid_start = time.time()
-        steer_ctrl, throttle_ctrl, brake_ctrl, metadata = self.net.process_action(pred, tick_data['next_command'], gt_velocity, target_point)
-        steer_traj, throttle_traj, brake_traj, metadata_traj = self.net.control_pid(pred['pred_wp'], gt_velocity, target_point)
-        T_pid_end = time.time()
-
-        # self.get_logger().info(f"gt_velocity: {gt_velocity}")
-        # self.get_logger().info(f"target_point: {target_point}")
-        # self.get_logger().info(f"pred_wp.cpu().numpy(): {pred['pred_wp'].cpu().numpy()}")
-        # self.get_logger().info(f"steer_ctrl: {steer_ctrl}, throttle_ctrl: {throttle_ctrl}, brake_ctrl: {brake_ctrl}") #debug
-        # self.get_logger().info(f"steer_traj: {steer_traj}, throttle_traj: {throttle_traj}, brake_traj: {brake_traj}") #debug
-
-        # STEP 4: 제어 명령 생성 및 publish
-        # self.get_logger().warning(f"- process_step(): generate control")
-        control = TCPBranchOutput()
-
-        if PLANNER_TYPE == 'only_traj':
-            self.pid_metadata = metadata_traj
-            self.pid_metadata['agent'] = 'only_traj'
-            control.steer = np.clip(float(steer_traj), -1, 1)
-            control.throttle = np.clip(float(throttle_traj), 0, 0.75)
-            control.brake = np.clip(float(brake_traj), 0, 1)
-        elif PLANNER_TYPE == 'only_ctrl':
-            self.pid_metadata = metadata
-            self.pid_metadata['agent'] = 'only_ctrl'
-            control.steer = np.clip(float(steer_ctrl), -1, 1)
-            control.throttle = np.clip(float(throttle_ctrl), 0, 0.75)
-            control.brake = np.clip(float(brake_ctrl), 0, 1)
-        elif PLANNER_TYPE == 'merge_ctrl_traj':
-            self.pid_metadata = metadata_traj
-            self.pid_metadata['agent'] = 'merge_ctrl_traj'
-            alpha = 0.5
-            control.steer = np.clip(alpha * steer_traj + (1 - alpha) * steer_ctrl, -1, 1)
-            control.throttle = np.clip(alpha * throttle_traj + (1 - alpha) * throttle_ctrl, 0, 0.75)
-            control.brake = max(np.clip(float(brake_ctrl), 0, 1), np.clip(float(brake_traj), 0, 1))
-            # self.get_logger().warning(f"[debug1] steer={control.steer}") #debug
-            # self.get_logger().warning(f"[debug2] throttle={control.throttle}") #debug
-            # self.get_logger().warning(f"[debug3] brake={control.brake}") #debug
+        # STEP 4: 메시지 생성 & Publish
+        ## trigger msg
+        tick_trigger_msg = TickTrigger()
+        tick_trigger_msg.trigger = True
+        tick_trigger_msg.step = self.step
         
-        # self.get_logger().warning(f"- process_step(): clipping")
-        if abs(control.steer) > 0.07:   ## In turning
-            speed_threshold = 1.0   ## Avoid stuck during turning
-        else:
-            speed_threshold = 1.5   ## Avoid pass stop/red light/collision
-        if float(tick_data['speed']) > speed_threshold:
-            max_throttle = 0.05
-        else:
-            max_throttle = 0.5
-        control.throttle = np.clip(control.throttle, a_min=0.0, a_max=max_throttle)
+        T_tick_pub_start = time.time()
+        self.tick_trigger_pub.publish(tick_trigger_msg)
+        T_tick_pub_end = time.time()
+        
+        ## backbone output msg
+        msg = TCPBackboneOutput()
+        msg.cnn_feature = cnn_feature.flatten().tolist()
+        msg.measurement_feature = measurement_feature.flatten().tolist()
+        msg.traj_hidden_state = traj_hidden_state.flatten().tolist()
+        msg.speed = float(tick_data['speed'])  # 원래 속도
+        msg.gt_velocity = float(gt_velocity.item())  # 정규화된 속도 입력
+        msg.target_point = [float(target_point[0, 0].item()), float(target_point[0, 1].item())]
+        msg.command = cmd_one_hot.view(-1).tolist()
+        msg.pred_wp = backbone_outputs['pred_wp'].view(-1).tolist()
+        msg.step = self.step
 
-        if control.brake > 0:
-            control.brake = 1.0
-        if control.brake > 0.5:
-            control.throttle = 0.0
-
-        # self.get_logger().warning(f"[PUB CONTROL] steer={control.steer}, throttle={control.throttle}, brake={control.brake}") #debug
-        control.step = self.step
-
-        T_pub_start = time.time()
-        self.control_pub.publish(control)
-        T_pub_end = time.time()
+        T_bb_pub_start = time.time()
+        self.backbone_publisher.publish(msg)
+        T_bb_pub_end = time.time()
+        print(f"[Backbone] Publish tick_trigger, step={self.step}")
 
         # STEP 5: 결과 저장
         if self.debug_mode > 0:
             T_log_start = time.time()
             self.pid_metadata = {
                 'step': self.step,
+                'cnn_feature': list(msg.cnn_feature[:10]),
+                'measurement_feature': list(msg.measurement_feature),
+                'traj_hidden_state': list(msg.traj_hidden_state[:10]),
+                'speed': float(tick_data['speed']),  # 원래 속도,
+                'gt_velocity' : float(gt_velocity.item()), # 정규화된 속도 입력
+                'target_point' : [float(target_point[0, 0].item()), float(target_point[0, 1].item())],
+                'command' : cmd_one_hot.view(-1).tolist(),
+
                 'ros_time_ns': ros_time_ns,
                 'tick_ms': (T_t_end - T_t_start) * 1000,
                 'preprocess_ms': (T_pp_end - T_pp_start) * 1000,
-                'net_inference_ms': (T_net_end - T_net_start) * 1000,
-                'pid_calc_ms': (T_pid_end - T_pid_start) * 1000,
-                'gen_msg_ms': (T_pub_start - T_pid_end) * 1000,
-                'publish_ms': (T_pub_end - T_pub_start) * 1000,
-                'total_process_step_ms': (T_pub_end - T_proc_start) * 1000,
-
-                'steer_ctrl': float(steer_ctrl),
-                'steer_traj': float(steer_traj),
-                'throttle_ctrl': float(throttle_ctrl),
-                'throttle_traj': float(throttle_traj),
-                'brake_ctrl': float(brake_ctrl),
-                'brake_traj': float(brake_traj),
-                'steer': control.steer,
-                'throttle': control.throttle,
-                'brake': control.brake,
+                'backbone_inference_ms': (T_bb_end - T_bb_start) * 1000,
+                'gen_trig_msg_ms': (T_tick_pub_start - T_bb_end) * 1000,
+                'gen_bb_msg_ms': (T_bb_pub_start - T_tick_pub_end) * 1000,
+                'tick_publish_ms': (T_tick_pub_start - T_tick_pub_end) * 1000,
+                'bb_publish_ms': (T_bb_pub_end - T_bb_pub_start) * 1000,
+                'total_process_step_ms': (T_bb_pub_end - T_proc_start) * 1000
             }
             
             if SAVE_PATH and self.step % 1 == 0 and self.debug_mode > 2:
@@ -522,22 +524,34 @@ class TCPAgentNode(Node):
                         self.step, self.try_proc_num,
                         T_proc_start,
                         T_t_start, T_t_end,
-                        T_pp_start, T_pp_end,
-                        T_net_start, T_net_end,
-                        T_pid_start, T_pid_end,
-                        T_pid_end, T_pub_start, # gen msg time
-                        T_pub_start, T_pub_end,
+                        T_pp_start, 
+                        T_rgb_start, 
+                        T_im_trans_start, T_im_trans_end,
+                        T_tocuda_start, T_tocuda_end,
+                        T_rgb_end,
+                        T_one_hot_start, T_one_hot_end,
+                        T_tick_start, T_tick_end,
+                        T_stack_start, T_stack_end,
+                        T_state_start, T_state_end,
+                        T_pp_end,
+                        T_bb_start, T_bb_end,
+                        T_bb_end, T_tick_pub_start,
+                        T_tick_pub_start, T_tick_pub_end,
+                        T_tick_pub_end, T_bb_pub_start,
+                        T_bb_pub_start, T_bb_pub_end,
                         T_log_start, time.time()
                     ])
             
-            if self.debug_mode > 1: 
+            if self.debug_mode > 1:       
                 T_log_end = time.time()
-                self.get_logger().warning(f"[TCPAgentNode] Process step finished, step={self.step}")
+                # self.get_logger().warning(f"[TCPBackboneNode] logging_time_ms: {(T_log_end - T_log_start) * 1000}")
+                self.get_logger().warning(f"[TCPBackboneNode] Process step finished, step={self.step}")
+
 
     def save(self, tick_data):
         frame = self.step
         PILImage.fromarray(tick_data['rgb_front']).save(self.save_path / 'rgb_front' / (f'%04d.png' % frame))
-        with open(self.save_path / 'meta' / (f'%04d.json' % frame), 'w') as outfile:
+        with open(self.save_path / 'meta_backbone' / (f'%04d.json' % frame), 'w') as outfile:
             json.dump(self.pid_metadata, outfile, indent=4)
 
     def gps_to_location(self, gps):
@@ -565,11 +579,11 @@ def main():
     args = parser.parse_args()
 
     rclpy.init()
-    node = TCPAgentNode(args.ckpt_path, args.save_path, args.debug_mode, args.img_input, args.img_k)
+    node = TCPBackboneNode(args.ckpt_path, args.save_path, args.debug_mode, args.img_input, args.img_k)
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        node.get_logger().info("Shutting down TCP Agent Node")
+        node.get_logger().info("Shutting down TCP Backbone Node")
     finally:
         node.destroy()
         rclpy.shutdown()

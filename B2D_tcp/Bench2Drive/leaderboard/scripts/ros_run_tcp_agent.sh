@@ -5,8 +5,8 @@ source /opt/ros/humble/setup.bash
 export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/B2D_Demo/B2D_tcp/Bench2Drive/Bench2DriveZoo)
 
 export CKPT_PATH='./../Bench2DriveZoo/ckpts/tcp_b2d.ckpt'
-export SAVE_PATH='./eval_v1/'
-export DEBUG_MODE=2 #0: default 1: meta_data/timing_log 2: print log 3: save rgb_front/ meta_pid
+export SAVE_PATH='./../../jw_ws/single_eval/'
+export DEBUG_MODE=1 #0: default 1: meta_data/timing_log 2: print log 3: save rgb_front/ meta_pid
 export LEADERBOARD_ROOT=leaderboard
 export PLANNER_TYPE='merge_ctrl_traj'
 export IMG_INPUT='compressed'
