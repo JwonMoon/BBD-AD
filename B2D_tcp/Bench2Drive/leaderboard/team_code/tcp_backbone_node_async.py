@@ -82,6 +82,7 @@ class TCPBackboneNode(Node):
         self.speed_received = False
         self.global_plan_received = False
         self.global_plan_gps_received = False
+        self._is_ready = False
         
         self.pid_metadata = {} 
         
@@ -109,7 +110,8 @@ class TCPBackboneNode(Node):
         self.create_subscription(CarlaGnssRoute, '/carla/hero/global_plan_gps', self.global_plan_gps_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(CarlaRoute, '/carla/hero/global_plan', self.global_plan_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         
-        self.backbone_publisher = self.create_publisher(TCPBackboneOutput, '/tcp/backbone_output', QoSProfile(depth=1))
+        # self.backbone_publisher = self.create_publisher(TCPBackboneOutput, '/tcp/backbone_output', QoSProfile(depth=1))
+        self.backbone_publisher = self.create_publisher(TCPBackboneOutput, '/tcp/backbone_output', best_effort_qos)
         self.tick_trigger_pub = self.create_publisher(TickTrigger, '/tcp/tick_trigger', 1)
 
         if self.debug_mode > 0 and SAVE_PATH:
@@ -136,9 +138,16 @@ class TCPBackboneNode(Node):
                     'T_stack_start', 'T_stack_end',
                     'T_state_start', 'T_state_end',
                     'T_pp_end', 
-                    'T_bb_start', 'T_bb_end', 
-                    'T_tx_tick_start', 'T_tx_tick_end', 
-                    'T_tick_pub_start', 'T_tick_pub_end', 
+                    'T_bb_start',
+                    
+                    'T_bb_perception',
+                    'T_bb_speed_branch',
+                    'T_bb_measurements',
+                    'T_bb_join_traj',
+                    'T_bb_branch_traj',
+                    'T_bb_pred_wp',
+                    
+                    'T_bb_end', 
                     'T_tx_bb_start', 'T_tx_bb_end', 
                     'T_bb_pub_start', 'T_bb_pub_end', 
                     'T_log_start', 'T_log_end'
@@ -407,9 +416,6 @@ class TCPBackboneNode(Node):
 
         if tick_data is None or self.step < self.config.seq_len:
             self.get_logger().warning(f"- process_step(): No tick data or step < seq_len at step {self.step}, retutn control 0")
-            rgb = self._im_transform(tick_data['rgb']).unsqueeze(0)
-            control = CarlaEgoVehicleControl()
-            self.control_pub.publish(control)
             return
 
         # STEP 2: input preprocessing
@@ -470,15 +476,16 @@ class TCPBackboneNode(Node):
         T_bb_end = time.time()
 
         # STEP 4: 메시지 생성 & Publish
+        
         ## trigger msg
-        tick_trigger_msg = TickTrigger()
-        tick_trigger_msg.trigger = True
-        tick_trigger_msg.step = self.step
+        if self._is_ready == False:
+            tick_trigger_msg = TickTrigger()
+            tick_trigger_msg.trigger = True
+            self.tick_trigger_pub.publish(tick_trigger_msg)
+            print(f"[Backbone] Publish tick_trigger, step={self.step}")
+            self._is_ready = True
         
-        T_tick_pub_start = time.time()
-        self.tick_trigger_pub.publish(tick_trigger_msg)
-        T_tick_pub_end = time.time()
-        
+        T_tx_bb_start = time.time()
         ## backbone output msg
         msg = TCPBackboneOutput()
         msg.cnn_feature = cnn_feature.flatten().tolist()
@@ -494,7 +501,6 @@ class TCPBackboneNode(Node):
         T_bb_pub_start = time.time()
         self.backbone_publisher.publish(msg)
         T_bb_pub_end = time.time()
-        print(f"[Backbone] Publish tick_trigger, step={self.step}")
 
         # STEP 5: 결과 저장
         if self.debug_mode > 0:
@@ -513,9 +519,7 @@ class TCPBackboneNode(Node):
                 'tick_ms': (T_t_end - T_t_start) * 1000,
                 'preprocess_ms': (T_pp_end - T_pp_start) * 1000,
                 'backbone_inference_ms': (T_bb_end - T_bb_start) * 1000,
-                'gen_trig_msg_ms': (T_tick_pub_start - T_bb_end) * 1000,
-                'gen_bb_msg_ms': (T_bb_pub_start - T_tick_pub_end) * 1000,
-                'tick_publish_ms': (T_tick_pub_start - T_tick_pub_end) * 1000,
+                'gen_bb_msg_ms': (T_bb_pub_start - T_tx_bb_start) * 1000,
                 'bb_publish_ms': (T_bb_pub_end - T_bb_pub_start) * 1000,
                 'total_process_step_ms': (T_bb_pub_end - T_proc_start) * 1000
             }
@@ -541,10 +545,17 @@ class TCPBackboneNode(Node):
                         T_stack_start, T_stack_end,
                         T_state_start, T_state_end,
                         T_pp_end,
-                        T_bb_start, T_bb_end,
-                        T_bb_end, T_tick_pub_start,
-                        T_tick_pub_start, T_tick_pub_end,
-                        T_tick_pub_end, T_bb_pub_start,
+                        T_bb_start, 
+                        
+                        backbone_outputs['timing']['perception'],
+                        backbone_outputs['timing']['speed_branch'],
+                        backbone_outputs['timing']['measurements'],
+                        backbone_outputs['timing']['join_traj'],
+                        backbone_outputs['timing']['branch_traj'],
+                        backbone_outputs['timing']['pred_wp'],
+                        
+                        T_bb_end,
+                        T_tx_bb_start, T_bb_pub_start,
                         T_bb_pub_start, T_bb_pub_end,
                         T_log_start, time.time()
                     ])
@@ -597,3 +608,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+#jw
+# node -> async: delete tick trigger publisher

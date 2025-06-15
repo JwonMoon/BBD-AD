@@ -19,7 +19,7 @@ from scipy.optimize import fsolve
 
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, DurabilityPolicy
+from rclpy.qos import QoSProfile, DurabilityPolicy, QoSReliabilityPolicy
 from carla_msgs.msg import CarlaEgoVehicleControl
 from tf_transformations import euler_from_quaternion
 from TCP.model_branch import TCPBranch
@@ -54,10 +54,18 @@ class TCPBranchNode(Node):
         self.net.eval()
         
         self.pid_metadata = {} 
-        
-        self.subscription = self.create_subscription(TCPBackboneOutput, '/tcp/backbone_output', self.backbone_callback, QoSProfile(depth=1))
+                
+        # BEST_EFFORT QoS 프로파일 생성
+        best_effort_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+            depth=1
+        )
 
+        # self.subscription = self.create_subscription(TCPBackboneOutput, '/tcp/backbone_output', self.backbone_callback, QoSProfile(depth=1))
+        self.subscription = self.create_subscription(TCPBackboneOutput, '/tcp/backbone_output', self.backbone_callback, best_effort_qos)
         self.control_pub = self.create_publisher(TCPBranchOutput, '/tcp/vehicle_control_cmd', QoSProfile(depth=1))
+        # self.control_pub = self.create_publisher(TCPBranchOutput, '/tcp/vehicle_control_cmd', best_effort_qos)
 
         if (self.debug_mode > 0) and SAVE_PATH:
             now = datetime.datetime.now()
@@ -72,7 +80,15 @@ class TCPBranchNode(Node):
                 writer.writerow([
                     'step', 'T_cb_start', 
                     'T_rx_start', 'T_rx_end', 
-                    'T_br_start', 'T_br_end', 
+                    'T_br_start', 
+                    
+                    'T_br_init_att',
+                    'T_br_join_ctrl',
+                    'T_br_branch_ctrl',
+                    'T_br_action_head',
+                    'T_br_future_feature_action',
+                    
+                    'T_br_end', 
                     'T_pid_start', 'T_pid_end', 
                     'T_pub_start', 'T_pub_end', 
                     'T_log_start', 'T_log_end'
@@ -211,7 +227,15 @@ class TCPBranchNode(Node):
                     writer.writerow([
                         self.step, T_cb_start,
                         T_rx_start, T_rx_end,
-                        T_br_start, T_br_end,
+                        T_br_start, 
+                     
+                        pred['timing']['init_att'],
+                        pred['timing']['join_ctrl'],
+                        pred['timing']['branch_ctrl'],
+                        pred['timing']['action_head'],
+                        pred['timing']['future_feature_action'],
+
+                        T_br_end,
                         T_pid_start, T_pid_end,
                         T_pub_start, T_pub_end,
                         T_log_start, time.time()

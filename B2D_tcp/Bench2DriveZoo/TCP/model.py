@@ -195,33 +195,34 @@ class TCP(nn.Module):
 
 	def forward(self, img, state, target_point):
 		timing = {}
-		t0 = time.perf_counter()
 		
+		t0 = time.time()
 		feature_emb, cnn_feature = self.perception(img)
-		
-		t1 = time.perf_counter()
-		# print(f"[TCP] CNN backbone: {(t1 - t0) * 1000:.2f} ms")
-		timing['cnn_ms'] = (t1 - t0) * 1000
+		t1 = time.time()
+		timing['perception'] = (t1 - t0)*1000
 		
 		outputs = {}
-		outputs['pred_speed'] = self.speed_branch(feature_emb)
-		measurement_feature = self.measurements(state)
-		
-		t2 = time.perf_counter()
-		# print(f"[TCP] State MLP: {(t2 - t1) * 1000:.2f} ms")
-		timing['state_mlp_ms'] = (t2 - t1) * 1000
+		outputs['speed_branch'] = self.speed_branch(feature_emb)
+		t2 = time.time()
+		timing['speed_branch'] = (t2 - t1)*1000
 
+		measurement_feature = self.measurements(state)
+		t3 = time.time()
+		timing['measurements'] = (t3 - t2)*1000
+		
 		j_traj = self.join_traj(torch.cat([feature_emb, measurement_feature], 1))
+		t4 = time.time()
+		timing['join_traj'] = (t4- t3)*1000
+
 		outputs['pred_value_traj'] = self.value_branch_traj(j_traj)
 		outputs['pred_features_traj'] = self.feature_branch_traj(j_traj)
+		t5 = time.time()
+		timing['branch_traj'] = (t5- t4)*1000
+
 		z = j_traj
 		output_wp = list()
 		traj_hidden_state = list()
 		
-		t3 = time.perf_counter()
-		# print(f"[TCP] Traj branch: {(t3 - t2) * 1000:.2f} ms")
-		timing['traj_branch_ms'] = (t3 - t2) * 1000	
-
 		# initial input variable to GRU
 		x = torch.zeros(size=(z.shape[0], 2), dtype=z.dtype).type_as(z)
 
@@ -236,19 +237,30 @@ class TCP(nn.Module):
 
 		pred_wp = torch.stack(output_wp, dim=1)
 		outputs['pred_wp'] = pred_wp
+		t6 = time.time()
+		timing['pred_wp'] = (t6- t5)*1000
 
 		traj_hidden_state = torch.stack(traj_hidden_state, dim=1)
+
+		t7 = time.time()
 		init_att = self.init_att(measurement_feature).view(-1, 1, 8, 29)
+		t8 = time.time()
+		timing['init_att'] = (t8 - t7)*1000
+
 		feature_emb = torch.sum(cnn_feature*init_att, dim=(2, 3))
 		j_ctrl = self.join_ctrl(torch.cat([feature_emb, measurement_feature], 1))
+		t9 = time.time()
+		timing['join_ctrl'] = (t9 - t8)*1000
+
 		outputs['pred_value_ctrl'] = self.value_branch_ctrl(j_ctrl)
 		outputs['pred_features_ctrl'] = self.feature_branch_ctrl(j_ctrl)
+		t10 = time.time()
+		timing['branch_ctrl'] = (t10 - t9)*1000
+
 		policy = self.policy_head(j_ctrl)
 		outputs['action_index'] = self.action_head(policy)
-
-		t4 = time.perf_counter()
-		# print(f"[TCP] Ctrl branch: {(t4 - t3) * 1000:.2f} ms")
-		timing['ctrl_branch_ms'] = (t4 - t3) * 1000
+		t11 = time.time()
+		timing['action_head'] = (t11- t10)*1000
 
 		x = j_ctrl
 		action_index = outputs['action_index']
@@ -270,6 +282,9 @@ class TCP(nn.Module):
 			action_index = self.action_head(policy)
 			future_feature.append(self.feature_branch_ctrl(x))
 			future_action_index.append(action_index)
+
+		t12 = time.time()
+		timing['future_feature_action'] = (t12- t11)*1000
 
 		outputs['future_feature'] = future_feature
 		outputs['future_action_index'] = future_action_index

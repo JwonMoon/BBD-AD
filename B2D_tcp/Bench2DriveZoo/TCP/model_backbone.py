@@ -195,33 +195,34 @@ class TCPBackbone(nn.Module):
 
 	def forward(self, img, state, target_point):
 		timing = {}
-		t0 = time.perf_counter()
 		
+		t0 = time.time()
 		feature_emb, cnn_feature = self.perception(img)
-		
-		t1 = time.perf_counter()
-		# print(f"[TCP] CNN backbone: {(t1 - t0) * 1000:.2f} ms")
-		timing['cnn_ms'] = (t1 - t0) * 1000
+		t1 = time.time()
+		timing['perception'] = (t1 - t0)*1000
 		
 		outputs = {}
-		outputs['pred_speed'] = self.speed_branch(feature_emb)
-		measurement_feature = self.measurements(state)
-		
-		t2 = time.perf_counter()
-		# print(f"[TCP] State MLP: {(t2 - t1) * 1000:.2f} ms")
-		timing['state_mlp_ms'] = (t2 - t1) * 1000
+		outputs['speed_branch'] = self.speed_branch(feature_emb)
+		t2 = time.time()
+		timing['speed_branch'] = (t2 - t1)*1000
 
+		measurement_feature = self.measurements(state)
+		t3 = time.time()
+		timing['measurements'] = (t3 - t2)*1000
+		
 		j_traj = self.join_traj(torch.cat([feature_emb, measurement_feature], 1))
+		t4 = time.time()
+		timing['join_traj'] = (t4- t3)*1000
+
 		outputs['pred_value_traj'] = self.value_branch_traj(j_traj)
 		outputs['pred_features_traj'] = self.feature_branch_traj(j_traj)
+		t5 = time.time()
+		timing['branch_traj'] = (t5- t4)*1000
+
 		z = j_traj
 		output_wp = list()
 		traj_hidden_state = list()
 		
-		t3 = time.perf_counter()
-		# print(f"[TCP] Traj branch: {(t3 - t2) * 1000:.2f} ms")
-		timing['traj_branch_ms'] = (t3 - t2) * 1000	
-
 		# initial input variable to GRU
 		x = torch.zeros(size=(z.shape[0], 2), dtype=z.dtype).type_as(z)
 
@@ -236,6 +237,10 @@ class TCPBackbone(nn.Module):
 
 		pred_wp = torch.stack(output_wp, dim=1)
 		outputs['pred_wp'] = pred_wp
+		t6 = time.time()
+		timing['pred_wp'] = (t6- t5)*1000
+
+		outputs['timing'] = timing
 
 		traj_hidden_state = torch.stack(traj_hidden_state, dim=1)
 		
