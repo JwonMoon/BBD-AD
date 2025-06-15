@@ -81,8 +81,7 @@ def draw_diagram_from_mean_durations(mean):
         f["T_bb_rx_start"] = f["T_bb_start"]
         f["T_bb_pp_start"] = f["T_bb_rx_start"] + mean["D_bb_rx"]
         f["T_bb_net_start"] = f["T_bb_pp_start"] + mean["D_bb_pp"]
-        f["T_bb_tick_pub_start"] = f["T_bb_net_start"] + mean["D_bb_net"] # inlcude msg gen time
-        f["T_bb_bb_pub_start"] = f["T_bb_tick_pub_start"] + mean["D_bb_tick_pub"]
+        f["T_bb_bb_pub_start"] = f["T_bb_net_start"] + mean["D_bb_net"]
         f["T_bb_bb_pub_end"] = f["T_bb_bb_pub_start"] + mean["D_bb_bb_pub"]
 
         f["T_br_start"] = f["T_bb_bb_pub_start"] + mean["D_transfer_delay"]
@@ -105,9 +104,6 @@ def draw_diagram_from_mean_durations(mean):
 
     # 블록 그리기 (2프레임)
     for f in [f0, f1]:
-        # draw_block(ax, f["T_bb_cb_start"], mean["D_eval_tick_total"], y_levels["evaluator"], "", "orange")
-        # draw_block(ax, f["T_car_tick_start"], mean["D_car_tick"], y_levels["evaluator"], "tick", "darkgreen")
- 
         pink = "#ff3399"
         yellow = "#f7e600"
         cobalt_blue = "#0047AB"
@@ -115,7 +111,6 @@ def draw_diagram_from_mean_durations(mean):
         draw_block(ax, f["T_bb_rx_start"], mean["D_bb_rx"], y_levels["Backbone"], "rx", cobalt_blue)
         draw_block(ax, f["T_bb_pp_start"], mean["D_bb_pp"], y_levels["Backbone"], "pp", cobalt_blue)
         draw_block(ax, f["T_bb_net_start"], mean["D_bb_net"], y_levels["Backbone"], "net", cobalt_blue)
-        # draw_block(ax, f["T_bb_tick_pub_start"], mean["D_bb_tick_pub"], y_levels["Backbone"], "tick pub", cobalt_blue)
         draw_block(ax, f["T_bb_bb_pub_start"], mean["D_bb_bb_pub"], y_levels["Backbone"], "bb pub", cobalt_blue)
         
         draw_block(ax, f["T_br_start"], mean["D_br_total"], y_levels["branch"], "", yellow)
@@ -128,12 +123,9 @@ def draw_diagram_from_mean_durations(mean):
         # draw_block(ax, f["T_car_ctrl_start"], mean["D_car_ctrl"], y_levels["evaluator"], "ctrl", "darkgreen")
 
     # 프레임 간 delay 점선
-    # draw_latency(ax, f0["T_bb_cb_end"], y_levels["evaluator"], f0["T_bb_start"], y_levels["Backbone"], "Sensor_delay", mean["D_sensor_delay"])
-    # draw_latency(ax, f0["T_bb_tick_pub_start"], y_levels["Backbone"], f1["T_bb_cb_start"], y_levels["evaluator"], "Trigger_delay", mean["D_trigger_delay"])
     draw_latency(ax, f0["T_bb_bb_pub_start"], y_levels["Backbone"], f0["T_br_start"], y_levels["branch"], "Transfer_delay", mean["D_transfer_delay"])
     # draw_latency(ax, f0["T_br_pub_start"], y_levels["branch"], f0["T_br_cb_start"], y_levels["evaluator"], "Control_delay", mean["D_control_delay"])
     
-    # draw_latency(ax, f1["T_bb_cb_end"], y_levels["evaluator"], f1["T_bb_start"], y_levels["Backbone"], "Sensor_delay", mean["D_sensor_delay"])
     draw_latency(ax, f1["T_bb_bb_pub_start"], y_levels["Backbone"], f1["T_br_start"], y_levels["branch"], "Transfer_delay", mean["D_transfer_delay"])
     # draw_latency(ax, f1["T_br_pub_start"], y_levels["branch"], f1["T_br_cb_start"], y_levels["evaluator"], "Control_delay", mean["D_control_delay"])
 
@@ -175,21 +167,14 @@ def main(args):
     merged["T_pub_start_next"] = merged["T_pub_start"].shift(-1)
 
     # 🔹 Duration 계산
-    # merged["D_eval_tick_total"] = (merged["T_bb_cb_end"] - merged["T_bb_cb_start"]) * 1000
-    # merged["D_car_tick"] = (merged["T_car_tick_end"] - merged["T_car_tick_start"]) * 1000
-    # merged["D_car_tick_call"] = (merged["T_car_tick_start"] - merged["T_bb_cb_start"]) * 1000
-    
-    # merged["D_sensor_delay"] = (merged["T_proc_start_next"] - merged["T_bb_cb_end"]) * 1000
     merged["D_tick"] = (merged["T_proc_start_next"] - merged["T_proc_start"]) * 1000
 
     merged["D_bb_total"] = (merged["T_bb_pub_end"] - merged["T_proc_start"]) * 1000
     merged["D_bb_rx"] = (merged["T_t_end"] - merged["T_proc_start"]) * 1000 # bb_start ~ rx_end
     merged["D_bb_pp"] = (merged["T_pp_end"] - merged["T_t_end"]) * 1000 
     merged["D_bb_net"] = (merged["T_bb_end"] - merged["T_pp_end"]) * 1000
-    merged["D_bb_tick_pub"] = (merged["T_tick_pub_end"] - merged["T_bb_end"]) * 1000 # include tx time
-    merged["D_bb_bb_pub"] = (merged["T_bb_pub_end"] - merged["T_tick_pub_end"]) * 1000 # include tx time
+    merged["D_bb_bb_pub"] = (merged["T_bb_pub_end"] - merged["T_tx_bb_start"]) * 1000 # include tx time
     
-    # merged["D_trigger_delay"] = (merged["T_bb_cb_start"] - merged["T_tick_pub_start"]) * 1000
     merged["D_transfer_delay"] = (merged["T_cb_start"] - merged["T_bb_pub_start"]) * 1000
 
     merged["D_br_total"] = (merged["T_pub_end"] - merged["T_cb_start"]) * 1000
@@ -212,20 +197,13 @@ def main(args):
 
     # 🔹 출력
     metric_list = [
-        # ("① evaluator tick 실행 시간", "D_eval_tick_total"),
-        # ("② carla tick 실행 시간", "D_car_tick"),
-        # ("③ carla tick 호출 시간", "D_car_tick_call"),
-        
-        # ("⑤ sensor delay", "D_sensor_delay"),
-
         ("① sensor tick", "D_tick"),
         
         ("⑥ backbone total 실행 시간", "D_bb_total"),
         ("⑥-1 backbone rx 실행 시간", "D_bb_rx"),
         ("⑥-2 backbone pp 실행 시간", "D_bb_pp"),
         ("⑥-3 backbone model 실행 시간", "D_bb_net"),
-        ("⑥-4 backbone tick trigger msg 생성 & publish 실행 시간", "D_bb_tick_pub"),
-        ("⑥-5 backbone feature msg 생성 & publish 실행 시간", "D_bb_tick_pub"),
+        ("⑥-4 backbone feature msg 생성 & publish 실행 시간", "D_bb_bb_pub"),
         
         ("⑦ transfer delay", "D_transfer_delay"),
         

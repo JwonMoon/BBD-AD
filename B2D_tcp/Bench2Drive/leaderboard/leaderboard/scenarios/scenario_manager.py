@@ -58,10 +58,6 @@ class ScenarioManager(object):
         """
         Setups up the parameters, which will be filled at load_scenario()
         """
-        #jw) to ROS node
-        # rclpy.init(args=None)
-        # super().__init__('scenario_manager_node')
-
         self.route_index = None
         self.scenario = None
         self.scenario_tree = None
@@ -89,14 +85,6 @@ class ScenarioManager(object):
 
         self.tick_count = 0
 
-        #jw) to ROS node
-        # self._control_sub = self.create_subscription(
-        #     CarlaEgoVehicleControl,
-        #     '/carla/hero/vehicle_control_cmd',
-        #     self._control_callback,
-        #     QoSProfile(depth=1)
-        # )
-
         # Use the callback_id inside the signal handler to allow external interrupts
         signal.signal(signal.SIGINT, self.signal_handler)
 
@@ -109,14 +97,6 @@ class ScenarioManager(object):
         elif self._watchdog and not self._watchdog.get_status():
             raise RuntimeError("The simulation took longer than {}s to update".format(self._timeout))
         self._running = False
-
-    # jw) to ROS node
-    # def _control_callback(self, msg):
-    #     if self._running:
-    #         try:
-    #             self._tick_scenario()
-    #         except Exception as e:
-    #             self.get_logger().error(f"[ScenarioManager ROS2] tick exception: {str(e)}")
 
     def cleanup(self):
         """
@@ -164,7 +144,7 @@ class ScenarioManager(object):
             self.scenario.build_scenarios(self.ego_vehicles[0], debug=debug)
             # self.scenario.spawn_parked_vehicles(self.ego_vehicles[0]) #jw
             time.sleep(1)
-        
+
     def run_scenario(self):
         """
         Trigger the start of the scenario and wait for it to finish/fail
@@ -193,13 +173,6 @@ class ScenarioManager(object):
         #         print("[ScenarioManager] self._running == False !!")
         #         return
         #     self._tick_scenario()
-            
-        #jw) to ROS node
-        # try:
-        #     while self._running:
-        #         time.sleep(0.001)
-        # except KeyboardInterrupt:
-        #     self._running = False
 
     def _tick_scenario(self, ego_action):
         """

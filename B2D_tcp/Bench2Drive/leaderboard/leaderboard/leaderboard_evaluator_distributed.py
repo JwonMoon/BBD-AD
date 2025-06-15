@@ -282,7 +282,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             print(f"[EvaluatorAgent] Received tick trigger, step={msg.step}")
             try:
                 # T_bb_cb_start, T_car_tick_start, T_car_tick_end, T_bb_cb_end = self._scenario_manager._tick_simulation(msg.step)
-                T_car_tick_start, T_car_tick_end = self._scenario_manager._tick_simulation(msg.step)
+                T_car_tick_start, T_car_tick_end = self._scenario_manager._tick_simulation()
             except Exception as e:
                 print(f"tick_callback error: {e}")
         T_bb_cb_end = time.time()
@@ -311,7 +311,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             print(f"[EvaluatorAgent] Received control_cmd")
             try:
                 # T_br_cb_start, T_car_ctrl_satrt, T_car_ctrl_end, T_br_cb_end = self._scenario_manager._apply_control(self._control, msg.step)
-                T_car_ctrl_satrt, T_car_ctrl_end = self._scenario_manager._apply_control(self._control, msg.step)
+                T_car_ctrl_satrt, T_car_ctrl_end = self._scenario_manager._apply_control(self._control)
             except Exception as e:
                 print(f"tick_callback error: {e}")
         T_br_cb_end = time.time()

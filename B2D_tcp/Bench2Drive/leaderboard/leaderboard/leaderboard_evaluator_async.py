@@ -34,7 +34,7 @@ from srunner.scenariomanager.carla_data_provider import *
 from srunner.scenariomanager.timer import GameTime
 from srunner.scenariomanager.watchdog import Watchdog
 
-from leaderboard.scenarios.scenario_manager import ScenarioManager
+from leaderboard.scenarios.scenario_manager_async import ScenarioManager
 from leaderboard.scenarios.route_scenario import RouteScenario
 from leaderboard.envs.sensor_interface import SensorConfigurationInvalid
 from leaderboard.autoagents.agent_wrapper import AgentError, validate_sensor_configuration, TickRuntimeError
@@ -47,7 +47,7 @@ from leaderboard.autoagents.autonomous_agent import AutonomousAgent
 # jw
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, DurabilityPolicy
+from rclpy.qos import QoSProfile, DurabilityPolicy, QoSReliabilityPolicy
 from carla_msgs.msg import CarlaRoute, CarlaGnssRoute
 from diagnostic_msgs.msg import KeyValue
 from geometry_msgs.msg import Point, Pose, Quaternion
@@ -100,38 +100,72 @@ def get_weather_id(weather_conditions):
 class EvaluatorAgent(Node, ROSBaseAgent):
     ROS_VERSION = 2
 
-    def __init__(self, carla_host, carla_port, debug=False):
+    # def __init__(self, carla_host, carla_port, debug=False):
+    def __init__(self, args):
         # rclpy 초기화
         rclpy.init(args=None)
         # ROSBaseAgent.__init__(self, self.ROS_VERSION, carla_host, carla_port, debug)
         # ROSBaseAgent의 브릿지만 초기화
-        AutonomousAgent.__init__(self, carla_host, carla_port, debug)  # ROSBaseAgent.__init__ 건너뜀
+        # AutonomousAgent.__init__(self, carla_host, carla_port, debug)  # ROSBaseAgent.__init__ 건너뜀
+        AutonomousAgent.__init__(self, args.host, args.port, args.debug > 0)  # ROSBaseAgent.__init__ 건너뜀
         Node.__init__(self, 'evaluator_node')
         
+        # BEST_EFFORT QoS 프로파일 생성
+        best_effort_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+            depth=1
+        )
+        
         self._control_subscriber = self.create_subscription(TCPBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, QoSProfile(depth=1))
+        # self._control_subscriber = self.create_subscription(TCPBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, best_effort_qos)
 
         self._path_publisher = self.create_publisher(CarlaRoute, "/carla/hero/global_plan", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self._path_gps_publisher = self.create_publisher(CarlaGnssRoute, "/carla/hero/global_plan_gps", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
 
         self._scenario_manager = None
         self.control = None
-        self.is_agent_ready = False
+        self._is_agent_ready = False
+        self.timeout = args.timeout
 
-        if debug and SAVE_PATH:
+        # if debug and SAVE_PATH:
+        if args.debug > 0 and SAVE_PATH:
             now = datetime.now()
             string = f"tcp_agent_{now.strftime('%m_%d_%H_%M_%S')}"
             self.save_path = pathlib.Path(SAVE_PATH) / string
             self.save_path.mkdir(parents=True, exist_ok=True)
 
-            self.log_file = self.save_path / 'evaluator_tcp_timing.csv'
-            with open(self.log_file, 'w', newline='') as f:
+            self.log_file_timer = self.save_path / 'evaluator_timer_cb_timing.csv'
+            with open(self.log_file_timer, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
-                    'step', 'T_tick_start', 
-                    'T_car_ctrl_start', 'T_car_ctrl_end', 
                     'T_car_tick_start', 'T_car_tick_end', 
-                    'T_tick_end'
                 ])
+            self.log_file_br = self.save_path / 'evaluator_tcp_cb_timing.csv'
+            with open(self.log_file_br, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    'step', 'T_tick_start', 'T_car_ctrl_start', 'T_car_ctrl_end', 'T_tick_end'
+                ])
+
+        tick_sec = 1 / args.tick_hz # ms to s
+        # print ("##################### tick_sec:", tick_sec)
+        self._tick_timer = self.create_timer(tick_sec, self._tick_simulation_cb)
+
+    def _tick_simulation_cb(self):
+        if self._is_agent_ready:
+            # print("_tick_simulation_cb")
+            T_car_tick_start = time.time()
+            CarlaDataProvider.get_world().tick(self.timeout)
+            T_car_tick_end = time.time()
+
+            # timing log 저장
+            if self.log_file_timer:
+                with open(self.log_file_timer, 'a', newline='') as f:
+                    writer = csv.writer(f)
+                    writer.writerow([
+                        T_car_tick_start, T_car_tick_end
+                    ])
 
     def sensors(self): #original
 	    return [
@@ -269,8 +303,9 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             return carla.VehicleControl()  # 기본적으로 멈춘 상태
 
     def _vehicle_control_cmd_callback(self, msg):
-        if self.is_agent_ready is False:
-            self.is_agent_ready = True
+        if self._is_agent_ready is False:
+            print(f"[EvaluatorAgent] set _is_agent_ready True, step={msg.step}")
+            self._is_agent_ready = True
 
         self.control = carla.VehicleControl(
             steer=msg.steer, 
@@ -285,21 +320,19 @@ class EvaluatorAgent(Node, ROSBaseAgent):
         if self._scenario_manager is not None:
             print(f"[Evaluator ROS2] Received control_cmd")
             try:
-                T_tick_start, T_car_ctrl_start, T_car_ctrl_end, T_car_tick_start, T_car_tick_end,T_tick_end = self._scenario_manager._tick_scenario(self.control)
+                T_tick_start, T_car_ctrl_start, T_car_ctrl_end, T_tick_end = self._scenario_manager._tick_scenario(self.control)
             except Exception as e:
                 print(f"tick_callback error: {e}")
 
         # timing log 저장
-        if self.log_file:
-            with open(self.log_file, 'a', newline='') as f:
+        if self.log_file_br:
+            with open(self.log_file_br, 'a', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
                     msg.step,
-                    T_tick_start, T_car_ctrl_start, T_car_ctrl_end, T_car_tick_start, T_car_tick_end, T_tick_end
+                    T_tick_start, T_car_ctrl_start, T_car_ctrl_end, T_tick_end
                 ])
 
-        # if hasattr(self, '_scenario_manager'):
-        #     self._scenario_manager._tick_scenario()
 class LeaderboardEvaluator(object):
     """
     Main class of the Leaderboard. Everything is handled from here,
@@ -578,7 +611,8 @@ class LeaderboardEvaluator(object):
             # args.agent_config = args.agent_config + '+' + save_name
             # self.agent_instance.setup(args.agent_config)
             #jw)
-            self.agent_instance = EvaluatorAgent(args.host, args.port, args.debug > 0)
+            # self.agent_instance = EvaluatorAgent(args.host, args.port, args.debug > 0)
+            self.agent_instance = EvaluatorAgent(args)
             
             # print("RouteScenario.gps_route:", self.route_scenario.gps_route)
             # print("RouteScenario.route:", self.route_scenario.route)
@@ -635,12 +669,12 @@ class LeaderboardEvaluator(object):
             self.manager.tick_count = 0
             
 
-            print(f"\033[1m>>> >>> self.agent_instance.is_agent_ready: {self.agent_instance.is_agent_ready}\033[0m", flush=True)
+            print(f"\033[1m>>> >>> self.agent_instance._is_agent_ready: {self.agent_instance._is_agent_ready}\033[0m", flush=True)
             print("\033[1m>>> run_scenario\033[0m", flush=True)
             self.manager.run_scenario()
             # jw) orin-warm-up
             while True:
-                if self.agent_instance.is_agent_ready is True:
+                if self.agent_instance._is_agent_ready is True:
                     break
                 else:
                     # ROS 콜백 처리를 위해 spin_once 호출
@@ -782,6 +816,8 @@ def main():
     parser.add_argument("--debug-checkpoint", type=str, default='./live_results.txt',
                         help="Path to checkpoint used for saving live results")
     parser.add_argument("--gpu-rank", type=int, default=0)
+    parser.add_argument('--save-path', default=None, help='Path to save debug outputs')
+    parser.add_argument('--tick-hz', type=int, default=20, help='Path to save debug outputs')
     arguments = parser.parse_args()
 
     statistics_manager = StatisticsManager(arguments.checkpoint, arguments.debug_checkpoint)

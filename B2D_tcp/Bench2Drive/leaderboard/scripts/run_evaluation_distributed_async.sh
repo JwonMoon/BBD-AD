@@ -30,6 +30,7 @@ export SAVE_PATH=${8}
 export HOST=${11} #jw
 # export DEBUG_MODE=0
 export DEBUG_MODE=${12} #jw
+export TICK_HZ=${13} #jw
 
 echo ""
 echo "▶ Calling run_evaluation.sh with 12 args:"
@@ -45,8 +46,9 @@ echo "PLANNER_TYPE=$PLANNER_TYPE"
 echo "GPU_RANK=$GPU_RANK"
 echo "HOST=$HOST"
 echo "DEBUG_MODE=$DEBUG_MODE"
+echo "TICK_HZ=$TICK_HZ"
 
-CUDA_VISIBLE_DEVICES=${GPU_RANK} python ${LEADERBOARD_ROOT}/leaderboard/leaderboard_evaluator_distributed.py \
+CUDA_VISIBLE_DEVICES=${GPU_RANK} python ${LEADERBOARD_ROOT}/leaderboard/leaderboard_evaluator_distributed_async.py \
 --routes=${ROUTES} \
 --repetitions=${REPETITIONS} \
 --track=${CHALLENGE_TRACK_CODENAME} \
@@ -60,4 +62,5 @@ CUDA_VISIBLE_DEVICES=${GPU_RANK} python ${LEADERBOARD_ROOT}/leaderboard/leaderbo
 --gpu-rank=${GPU_RANK} \
 --host=${HOST} \
 --save-path=${SAVE_PATH} \
+--tick-hz=${TICK_HZ}
 # --agent-config=${TEAM_CONFIG} \ #jw) 필요 없음
