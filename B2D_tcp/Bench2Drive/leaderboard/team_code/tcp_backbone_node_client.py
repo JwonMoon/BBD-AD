@@ -28,7 +28,9 @@ from carla_msgs.msg import CarlaEgoVehicleControl, CarlaRoute, CarlaEgoVehicleSt
 from tf_transformations import euler_from_quaternion
 from tcp_msgs.msg import TCPBackboneOutput, TickTrigger
 import csv
-import threading
+import threading, queue
+import socket
+import msgpack
 
 SAVE_PATH = os.environ.get('SAVE_PATH', None)
 
@@ -85,8 +87,13 @@ class TCPBackboneNode(Node):
         self.global_plan_gps_received = False
         # self._is_ready = False
         
-        self.pid_metadata = {} 
+        # self.pid_metadata = {} 
         
+        # 클래스 초기화 시
+        self.send_queue = queue.Queue(maxsize=3)
+        self.sender_thread = threading.Thread(target=self._tcp_sender_thread, daemon=True)
+        self.sender_thread.start()
+
         # BEST_EFFORT QoS 프로파일 생성
         best_effort_qos = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
@@ -114,6 +121,18 @@ class TCPBackboneNode(Node):
         # self.backbone_publisher = self.create_publisher(TCPBackboneOutput, '/tcp/backbone_output', QoSProfile(depth=1))
         self.backbone_publisher = self.create_publisher(TCPBackboneOutput, '/tcp/backbone_output', best_effort_qos)
         # self.tick_trigger_pub = self.create_publisher(TickTrigger, '/tcp/tick_trigger', 1)
+
+        # [추가] TCP 소켓 연결 (Orin2로 연결)
+        self.tcp_ip = "192.168.20.2"  # Orin2
+        self.tcp_port = 9999          # 포트는 맞춰서 사용
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 65536)  # 송신 버퍼 크기 64KB
+        try:
+            self.sock.connect((self.tcp_ip, self.tcp_port))
+            print(f"[TCPBackboneNode] Connected to TCP server at {self.tcp_ip}:{self.tcp_port}")
+        except Exception as e:
+            print(f"[TCPBackboneNode] TCP connection failed: {e}")
+            exit(1)
 
         if self.debug_mode > 0 and SAVE_PATH:
             now = datetime.datetime.now()
@@ -156,6 +175,132 @@ class TCPBackboneNode(Node):
 
             if self.debug_mode > 2:
                 (self.save_path / 'rgb_front').mkdir()
+
+
+    # def send_via_tcp(self, msg):
+    #     try:
+    #         # dictionary로 변환
+    #         payload = {
+    #             'cnn_feature': msg.cnn_feature,
+    #             'measurement_feature': msg.measurement_feature,
+    #             'traj_hidden_state': msg.traj_hidden_state,
+    #             'speed': float(msg.speed),
+    #             'gt_velocity': float(msg.gt_velocity),
+    #             'target_point': list(map(float, msg.target_point)),  # ensure list of floats
+    #             'command': list(map(float, msg.command)),            # ensure list of floats
+    #             'pred_wp': list(map(float, msg.pred_wp)),            # ensure list of floats
+    #             'step': int(msg.step)
+    #         }
+
+    #         serialized_msg = json.dumps(payload).encode('utf-8')
+    #         length = len(serialized_msg).to_bytes(4, byteorder='big')
+
+    #         self.sock.sendall(length + serialized_msg)  # 블로킹 방식
+    #         print(f"[TCPBackboneNode] Sent TCP data at step {msg.step}")
+
+    #     except Exception as e:
+    #         print(f"[TCPBackboneNode] TCP send failed: {e}")
+
+    # def send_via_tcp(self, msg):
+    #     try:
+    #         # 디버깅: 각 필드의 타입 출력
+    #         print(f"cnn_feature 타입: {type(msg.cnn_feature)}")
+    #         print(f"measurement_feature 타입: {type(msg.measurement_feature)}")
+    #         print(f"traj_hidden_state 타입: {type(msg.traj_hidden_state)}")
+    #         print(f"pred_wp 타입: {type(msg.pred_wp)}")
+
+    #         payload = {
+    #             'cnn_feature': [float(x) for x in msg.cnn_feature],
+    #             'measurement_feature': [float(x) for x in msg.measurement_feature],
+    #             'traj_hidden_state': [float(x) for x in msg.traj_hidden_state],
+    #             'speed': float(msg.speed),
+    #             'gt_velocity': float(msg.gt_velocity),
+    #             'target_point': [float(x) for x in msg.target_point],
+    #             'command': [float(x) for x in msg.command],
+    #             'pred_wp': [float(x) for x in msg.pred_wp],
+    #             'step': int(msg.step)
+    #         }
+
+    #         serialized_msg = json.dumps(payload).encode('utf-8')
+    #         length = len(serialized_msg).to_bytes(4, byteorder='big')
+
+    #         self.sock.sendall(length + serialized_msg)
+    #         print(f"[TCPBackboneNode] Sent TCP data at step {msg.step}")
+
+    #     except Exception as e:
+    #         print(f"[TCPBackboneNode] TCP send failed: {e}")
+
+    # 데이터를 큐에 넣는 비동기 전송 함수
+    def send_via_tcp_async(self, msg):
+        # print(f"[ASYNC] publishing start, step={msg[step]}")
+        self.send_queue.put(msg)  # 비동기 전송 요청 (non-blocking)
+        # print(f"[ASYNC] publishing end, step={msg[step]}")
+
+    # 실제 송신을 담당하는 스레드 함수
+    def _tcp_sender_thread(self):
+        while True:
+            try:
+                # msg = self.send_queue.get()  # 블로킹 get 1)msg gen 병목
+                # # serialize (msgpack 등)
+                # payload = {
+                #     'cnn_feature': list(msg.cnn_feature),
+                #     'measurement_feature': list(msg.measurement_feature),
+                #     'traj_hidden_state': list(msg.traj_hidden_state),
+                #     'speed': float(msg.speed),
+                #     'gt_velocity': float(msg.gt_velocity),
+                #     'target_point': list(map(float, msg.target_point)),
+                #     'command': list(map(float, msg.command)),
+                #     'pred_wp': list(map(float, msg.pred_wp)),
+                #     'step': int(msg.step)
+                # }
+                # serialized = msgpack.packb(payload, use_bin_type=True)
+                # length = len(serialized).to_bytes(4, byteorder='big')
+                # self.sock.sendall(length + serialized)
+
+                raw_msg = self.send_queue.get(timeout=0.1)  # 블로킹 get 2)msg gen 병목
+
+                # 이 안에서 직렬화
+                packed_msg = msgpack.packb(raw_msg, use_bin_type=True)
+                length_prefix = len(packed_msg).to_bytes(4, 'big')   
+
+                self.sock.sendall(length_prefix + packed_msg)
+                print(f"[TCPBackboneNode] [Thread] Sent step {msg.step}, size={len(compressed_msg)}")
+            except queue.Empty:
+                continue
+            except Exception as e:
+                print(f"[TCPBackboneNode] [Thread] TCP send failed: {e}")
+
+
+    def send_via_tcp(self, msg):
+        try:
+            # msgpack으로 직렬화
+            payload = {
+                # 'cnn_feature': msg.cnn_feature,  # 이미 list[float]
+                # 'measurement_feature': msg.measurement_feature,
+                # 'traj_hidden_state': msg.traj_hidden_state,
+                'cnn_feature': list(msg.cnn_feature),
+                'measurement_feature': list(msg.measurement_feature),
+                'traj_hidden_state': list(msg.traj_hidden_state),
+                'speed': float(msg.speed),
+                'gt_velocity': float(msg.gt_velocity),
+                'target_point': list(map(float, msg.target_point)),  # ensure list of floats
+                'command': list(map(float, msg.command)),            # ensure list of floats
+                'pred_wp': list(map(float, msg.pred_wp)),            # ensure list of floats
+                # 'target_point': msg.target_point,
+                # 'command': msg.command,
+                # 'pred_wp': msg.pred_wp,
+                'step': int(msg.step)
+            }
+
+            serialized_msg = msgpack.packb(payload, use_bin_type=True)  # 바이너리 포맷으로 직렬화 
+            length = len(serialized_msg).to_bytes(4, byteorder='big')
+
+            self.sock.sendall(length + serialized_msg)
+            print(f"[TCPBackboneNode] Sent msgpack data at step {msg.step}, size={len(serialized_msg)} bytes")
+
+        except Exception as e:
+            print(f"[TCPBackboneNode] TCP send failed: {e}")
+
 
     def decode_image(self, msg):
         try:
@@ -329,28 +474,28 @@ class TCPBackboneNode(Node):
             self.try_proc_num = 0
         else:
             self.try_proc_num += 1
-            if self.debug_mode > 1:
-                print("-----------------------------------------------")
-                print("too early to do process_step()")
-                if not self.initialized:
-                    print(f"initialized = {self.initialized}")
-                if self.rgb_front is None:
-                    print(f"rgb_front = {self.rgb_front is not None}")
-                if self.rgb_front_left is None:
-                    print(f"rgb_front_left = {self.rgb_front_left is not None}")
-                if self.rgb_front_right is None:
-                    print(f"rgb_front_right = {self.rgb_front_right is not None}")
-                if not self.gps_received:
-                    print(f"gps_received = {self.gps_received}")
-                if not self.imu_received:
-                    print(f"imu_received = {self.imu_received}")
-                if not self.speed_received:
-                    print(f"speed_received = {self.speed_received}")
-                if not self.global_plan_received:
-                    print(f"global_plan_received = {self.global_plan_received}")
-                if not self.global_plan_gps_received:
-                    print(f"global_plan_gps_received = {self.global_plan_gps_received}")
-                print("-----------------------------------------------")
+            # if self.debug_mode > 1:
+                # print("-----------------------------------------------")
+                # print("too early to do process_step()")
+                # if not self.initialized:
+                #     print(f"initialized = {self.initialized}")
+                # if self.rgb_front is None:
+                #     print(f"rgb_front = {self.rgb_front is not None}")
+                # if self.rgb_front_left is None:
+                #     print(f"rgb_front_left = {self.rgb_front_left is not None}")
+                # if self.rgb_front_right is None:
+                #     print(f"rgb_front_right = {self.rgb_front_right is not None}")
+                # if not self.gps_received:
+                #     print(f"gps_received = {self.gps_received}")
+                # if not self.imu_received:
+                #     print(f"imu_received = {self.imu_received}")
+                # if not self.speed_received:
+                #     print(f"speed_received = {self.speed_received}")
+                # if not self.global_plan_received:
+                #     print(f"global_plan_received = {self.global_plan_received}")
+                # if not self.global_plan_gps_received:
+                #     print(f"global_plan_gps_received = {self.global_plan_gps_received}")
+                # print("-----------------------------------------------")
 
     def tick(self):
         self.step += 1
@@ -435,12 +580,21 @@ class TCPBackboneNode(Node):
         # 1. 이미지 정규화 및 텐서 변환 (HWC → CHW, float, 정규화)
         # 2. 배치 차원 추가 (→ shape: (1, 3, H, W))
         T_im_trans_start = time.time()
+
+
         rgb_tensor = self._im_transform(tick_data['rgb']).unsqueeze(0)  # shape: (3, H, W), dtype: float32, normalized
+        # -- numpy
+        # rgb = tick_data['rgb'].astype(np.float32) / 255.0
+        # rgb = (rgb - np.array([0.485, 0.456, 0.406])) / np.array([0.229, 0.224, 0.225])
+        # rgb = np.transpose(rgb, (2, 0, 1))  # HWC → CHW
+        # numpy --
+
         T_im_trans_end = time.time()
         
         T_tocuda_start = time.time()
         # 3. GPU로 이동 + dtype 변환
         rgb_tensor = rgb_tensor.to('cuda', dtype=torch.float32)
+        # rgb_tensor = torch.from_numpy(rgb).unsqueeze(0).to('cuda', dtype=torch.float32) #numpy
         # torch.cuda.synchronize() #GPU 연산 완료를 강제로 기다리고 측정
         T_tocuda_end = time.time()
 
@@ -495,45 +649,67 @@ class TCPBackboneNode(Node):
         #     self._is_ready = True
         
         T_tx_bb_start = time.time()
-        ## backbone output msg
-        msg = TCPBackboneOutput()
-        msg.cnn_feature = cnn_feature.flatten().tolist()    # 중간 출력의 CPU 이동 -> overhead
-        msg.measurement_feature = measurement_feature.flatten().tolist()
-        msg.traj_hidden_state = traj_hidden_state.flatten().tolist()
-        msg.speed = float(tick_data['speed'])  # 원래 속도
-        msg.gt_velocity = float(gt_velocity.item())  # 정규화된 속도 입력
-        msg.target_point = [float(target_point[0, 0].item()), float(target_point[0, 1].item())]
-        msg.command = cmd_one_hot.view(-1).tolist()
-        msg.pred_wp = backbone_outputs['pred_wp'].view(-1).tolist()
-        msg.step = self.step
+        ## backbone output msg # bottleneck
+        # msg = TCPBackboneOutput()
+        # msg.cnn_feature = cnn_feature.flatten().tolist()    # 중간 출력의 CPU 이동 -> overhead
+        # msg.measurement_feature = measurement_feature.flatten().tolist()
+        # msg.traj_hidden_state = traj_hidden_state.flatten().tolist()
+        # msg.speed = float(tick_data['speed'])  # 원래 속도
+        # msg.gt_velocity = float(gt_velocity.item())  # 정규화된 속도 입력
+        # msg.target_point = [float(target_point[0, 0].item()), float(target_point[0, 1].item())]
+        # msg.command = cmd_one_hot.view(-1).tolist()
+        # msg.pred_wp = backbone_outputs['pred_wp'].view(-1).tolist()
+        # msg.step = self.step
+
+        msg_raw = {
+            'step': self.step,
+            'cnn_feature': cnn_feature.cpu().numpy().astype(np.float32).tobytes(),
+            'cnn_shape': list(cnn_feature.shape),
+            'measurement_feature': measurement_feature.cpu().numpy().astype(np.float32).tobytes(),
+            'measurement_shape': list(measurement_feature.shape),
+            'traj_hidden_state': traj_hidden_state.cpu().numpy().astype(np.float32).tobytes(),
+            'traj_shape': list(traj_hidden_state.shape),
+            'gt_velocity': float(gt_velocity.item()),
+            'target_point': target_point.cpu().numpy().astype(np.float32).tolist(),
+            'command': cmd_one_hot.view(-1).tolist(),
+            'pred_wp': backbone_outputs['pred_wp'].cpu().numpy().astype(np.float32).tolist()
+        }
 
         T_bb_pub_start = time.time()
-        # self.backbone_publisher.publish(msg)
-        self.publish_async(msg)
-        print(f"[MAIN] returned from publish_async(), step={self.step}")
+        # self.backbone_publisher.publish(msg) # 1)
+
+        # self.publish_async(msg)
+        # print(f"[MAIN] returned from publish_async(), step={self.step}") # 2)
+
+        # self.send_via_tcp(msg)  # 블로킹으로 전송 # 3)
+
+        # self.send_via_tcp_async(msg) # non-blocking 4)
+        self.send_via_tcp_async(msg_raw) # non-blocking 4)
+        print(f"[MAIN] returned from send_via_tcp(), step={self.step}")
+
         T_bb_pub_end = time.time()
 
         # STEP 5: 결과 저장
         if self.debug_mode > 0:
             T_log_start = time.time()
-            self.pid_metadata = {
-                'step': self.step,
-                'cnn_feature': list(msg.cnn_feature[:10]),
-                'measurement_feature': list(msg.measurement_feature),
-                'traj_hidden_state': list(msg.traj_hidden_state[:10]),
-                'speed': float(tick_data['speed']),  # 원래 속도,
-                'gt_velocity' : float(gt_velocity.item()), # 정규화된 속도 입력
-                'target_point' : [float(target_point[0, 0].item()), float(target_point[0, 1].item())],
-                'command' : cmd_one_hot.view(-1).tolist(),
+            # self.pid_metadata = {
+            #     'step': self.step,
+            #     'cnn_feature': list(msg.cnn_feature[:10]),
+            #     'measurement_feature': list(msg.measurement_feature),
+            #     'traj_hidden_state': list(msg.traj_hidden_state[:10]),
+            #     'speed': float(tick_data['speed']),  # 원래 속도,
+            #     'gt_velocity' : float(gt_velocity.item()), # 정규화된 속도 입력
+            #     'target_point' : [float(target_point[0, 0].item()), float(target_point[0, 1].item())],
+            #     'command' : cmd_one_hot.view(-1).tolist(),
 
-                'ros_time_ns': ros_time_ns,
-                'tick_ms': (T_t_end - T_t_start) * 1000,
-                'preprocess_ms': (T_pp_end - T_pp_start) * 1000,
-                'backbone_inference_ms': (T_bb_end - T_bb_start) * 1000,
-                'tx_bb_msg_ms': (T_bb_pub_start - T_tx_bb_start) * 1000,
-                'bb_publish_ms': (T_bb_pub_end - T_bb_pub_start) * 1000,
-                'total_process_step_ms': (T_bb_pub_end - T_proc_start) * 1000
-            }
+            #     'ros_time_ns': ros_time_ns,
+            #     'tick_ms': (T_t_end - T_t_start) * 1000,
+            #     'preprocess_ms': (T_pp_end - T_pp_start) * 1000,
+            #     'backbone_inference_ms': (T_bb_end - T_bb_start) * 1000,
+            #     'tx_bb_msg_ms': (T_bb_pub_start - T_tx_bb_start) * 1000,
+            #     'bb_publish_ms': (T_bb_pub_end - T_bb_pub_start) * 1000,
+            #     'total_process_step_ms': (T_bb_pub_end - T_proc_start) * 1000
+            # }
             
             if SAVE_PATH and self.step % 1 == 0 and self.debug_mode > 2:
                 # self.save(tick_data)
@@ -581,8 +757,8 @@ class TCPBackboneNode(Node):
     def save(self, tick_data):
         frame = self.step
         PILImage.fromarray(tick_data['rgb_front']).save(self.save_path / 'rgb_front' / (f'%04d.png' % frame))
-        with open(self.save_path / 'meta_backbone' / (f'%04d.json' % frame), 'w') as outfile:
-            json.dump(self.pid_metadata, outfile, indent=4)
+        # with open(self.save_path / 'meta_backbone' / (f'%04d.json' % frame), 'w') as outfile:
+        #     json.dump(self.pid_metadata, outfile, indent=4)
 
     def save_async(self, tick_data):
         def save_task():
@@ -621,6 +797,7 @@ def main():
         node.get_logger().info("Shutting down TCP Backbone Node")
     finally:
         node.destroy()
+        node.destroy_node()
         rclpy.shutdown()
 
 if __name__ == '__main__':
