@@ -6,7 +6,6 @@ BASE_PORT=10000 #localhost
 BASE_TM_PORT=50000
 IS_BENCH2DRIVE=True
 # BASE_ROUTES=leaderboard/data/bench2drive220
-# BASE_ROUTES=leaderboard/data/my_routes_highway_24795_50pts
 BASE_ROUTES=leaderboard/data/my_routes_highway_26406_40pts
 # TEAM_AGENT=leaderboard/team_code/tcp_b2d_agent.py
 TEAM_CONFIG=./../Bench2DriveZoo/ckpts/tcp_b2d.ckpt   # 필요 없음
