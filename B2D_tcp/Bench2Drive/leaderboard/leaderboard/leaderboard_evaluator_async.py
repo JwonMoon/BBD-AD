@@ -340,8 +340,7 @@ class LeaderboardEvaluator(object):
     """
 
     # Tunable parameters
-    client_timeout = 300.0  # in seconds
-    # frame_rate = 20.0      # in Hz
+    # client_timeout = 300.0  # in seconds
 
     def __init__(self, args, statistics_manager):
         """
@@ -355,7 +354,9 @@ class LeaderboardEvaluator(object):
         self.sensor_icons = []
         self.agent_instance = None
         self.route_scenario = None
-        self.frame_rate = 10.0      # in Hz #jw
+        # self.frame_rate = 20.0      # in Hz #jw
+        self.frame_rate = args.tick_hz      # in Hz #jw
+        print(">> args.tick_hz:", args.tick_hz)
 
         self.statistics_manager = statistics_manager
 
@@ -790,7 +791,7 @@ def main():
                         help='Run with debug output', default=0)
     parser.add_argument('--record', type=str, default='',
                         help='Use CARLA recording feature to create a recording of the scenario')
-    parser.add_argument('--timeout', default=100.0, type=float,
+    parser.add_argument('--timeout', default=1000.0, type=float,
                         help='Set the CARLA client timeout value in seconds')
 
     # simulation setup

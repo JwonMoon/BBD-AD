@@ -68,7 +68,7 @@ def draw_interval(ax, x0, y0, x1, y1, label, value, offset=0.4):
 
 def draw_diagram_from_mean_durations(mean):
     fig, ax = plt.subplots(figsize=(18, 4))
-    y_levels = {"Relay": 3, "Backbone": 2, "branch": 1}
+    y_levels = {"Relay": 3, "Backbone": 2, "Branch": 1}
 
     def compute_frame(prev_end):
         f = {}
@@ -123,29 +123,29 @@ def draw_diagram_from_mean_durations(mean):
         draw_block(ax, f["T_bb_bb_pub_start"], mean["D_bb_bb_pub"], y_levels["Backbone"], "bb pub", cobalt_blue)
         draw_block(ax, f["T_bb_log_start"], mean["D_bb_log"], y_levels["Backbone"], "log", cobalt_blue)
         
-        draw_block(ax, f["T_br_start"], mean["D_br_total"], y_levels["branch"], "", yellow)
+        draw_block(ax, f["T_br_start"], mean["D_br_total"], y_levels["Branch"], "", yellow)
         # draw_block(ax, f["T_br_rx_start"], mean["D_br_rx"], y_levels["branch"], "rx", cobalt_blue)
         
-        draw_block(ax, f["T_br_rx_start"], mean["D_br_from_bytes"], y_levels["branch"], "", cobalt_blue)
-        draw_block(ax, f["T_br_recv_start"], mean["D_br_recv"], y_levels["branch"], "recv", cobalt_blue)
-        draw_block(ax, f["T_br_restore_start"], mean["D_br_restore"], y_levels["branch"], "tensor", cobalt_blue)
+        draw_block(ax, f["T_br_rx_start"], mean["D_br_from_bytes"], y_levels["Branch"], "", cobalt_blue)
+        draw_block(ax, f["T_br_recv_start"], mean["D_br_recv"], y_levels["Branch"], "recv", cobalt_blue)
+        draw_block(ax, f["T_br_restore_start"], mean["D_br_restore"], y_levels["Branch"], "tensor", cobalt_blue)
         
-        draw_block(ax, f["T_br_net_start"], mean["D_br_net"], y_levels["branch"], "net", cobalt_blue)
-        draw_block(ax, f["T_br_pid_start"], mean["D_br_pid"], y_levels["branch"], "pid", cobalt_blue, 2)
-        draw_block(ax, f["T_br_pub_start"], mean["D_br_pub"], y_levels["branch"], "pub", cobalt_blue)
+        draw_block(ax, f["T_br_net_start"], mean["D_br_net"], y_levels["Branch"], "net", cobalt_blue)
+        draw_block(ax, f["T_br_pid_start"], mean["D_br_pid"], y_levels["Branch"], "pid", cobalt_blue, 2)
+        draw_block(ax, f["T_br_pub_start"], mean["D_br_pub"], y_levels["Branch"], "pub", cobalt_blue)
         
         draw_block(ax, f["T_rl_pub_start"], mean["D_rl_pub"], y_levels["Relay"], "", "purple")
         # draw_block(ax, f["T_car_ctrl_start"], mean["D_car_ctrl"], y_levels["evaluator"], "ctrl", "darkgreen")
 
     # 프레임 간 delay 점선
-    draw_latency(ax, f0["T_bb_bb_pub_start"], y_levels["Backbone"], f0["T_br_start"], y_levels["branch"], "Transfer_delay", mean["D_transfer_delay"])
-    draw_latency(ax, f0["T_br_pub_start"], y_levels["branch"], f0["T_rl_pub_start"], y_levels["Relay"], "Control_delay", mean["D_control_delay"])
+    draw_latency(ax, f0["T_bb_bb_pub_start"], y_levels["Backbone"], f0["T_br_start"], y_levels["Branch"], "Transfer_delay", mean["D_transfer_delay"])
+    draw_latency(ax, f0["T_br_pub_start"], y_levels["Branch"], f0["T_rl_pub_start"], y_levels["Relay"], "Control_delay", mean["D_control_delay"])
     
-    draw_latency(ax, f1["T_bb_bb_pub_start"], y_levels["Backbone"], f1["T_br_start"], y_levels["branch"], "Transfer_delay", mean["D_transfer_delay"])
-    draw_latency(ax, f1["T_br_pub_start"], y_levels["branch"], f1["T_rl_pub_start"], y_levels["Relay"], "Control_delay", mean["D_control_delay"])
+    draw_latency(ax, f1["T_bb_bb_pub_start"], y_levels["Backbone"], f1["T_br_start"], y_levels["Branch"], "Transfer_delay", mean["D_transfer_delay"])
+    draw_latency(ax, f1["T_br_pub_start"], y_levels["Branch"], f1["T_rl_pub_start"], y_levels["Relay"], "Control_delay", mean["D_control_delay"])
 
     draw_interval(ax, f0["T_bb_start"], y_levels["Backbone"], f1["T_bb_start"], y_levels["Backbone"], "tick", mean["D_tick"], 0.8)
-    draw_interval(ax, f0["T_br_pub_start"], y_levels["branch"], f1["T_br_pub_start"], y_levels["branch"], "output", mean["D_output"], -0.5)
+    draw_interval(ax, f0["T_br_pub_start"], y_levels["Branch"], f1["T_br_pub_start"], y_levels["Branch"], "output", mean["D_output"], -0.5)
     draw_interval(ax, f0["T_rl_pub_start"], y_levels["Relay"], f1["T_rl_pub_start"], y_levels["Relay"], "output", mean["D_rl_output"], +0.5)
 
 
