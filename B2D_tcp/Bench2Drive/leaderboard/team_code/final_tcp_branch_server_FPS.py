@@ -209,7 +209,7 @@ def start_branch_server(ckpt_path, debug_mode, orin1_ip='192.168.20.1', port_rec
                 'throttle': control_throttle,
                 'brake': control_brake
             }
-            # print(f"[PUB CONTROL] step={step}, steer={control_steer}, throttle={control_throttle}, brake={control_brake}") #debug
+            print(f"[PUB CONTROL] step={step}, steer={control_steer}, throttle={control_throttle}, brake={control_brake}") #debug
 
             payload = msgpack.packb(control, use_bin_type=True)  # MessagePack 직렬화
             T_tx_start = time.time()
