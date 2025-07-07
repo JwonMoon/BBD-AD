@@ -122,7 +122,7 @@ class TCPBackboneNode(Node):
         self.backbone_publisher = self.create_publisher(TCPBackboneOutput, '/tcp/backbone_output', best_effort_qos)
 
         # [추가] TCP 소켓 연결 (Orin2로 연결)
-        self.tcp_ip = "192.168.20.2"  # Orin2
+        self.tcp_ip = "localhost"  # Orin2
         self.tcp_port = 9999          # 포트는 맞춰서 사용
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 65536)  # 송신 버퍼 크기 64KB

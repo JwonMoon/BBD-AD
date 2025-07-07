@@ -456,20 +456,20 @@ class TCPAgentNode(Node):
         control = TCPBranchOutput()
 
         if PLANNER_TYPE == 'only_traj':
-            self.pid_metadata = metadata_traj
-            self.pid_metadata['agent'] = 'only_traj'
+            # self.pid_metadata = metadata_traj
+            # self.pid_metadata['agent'] = 'only_traj'
             control.steer = np.clip(float(steer_traj), -1, 1)
             control.throttle = np.clip(float(throttle_traj), 0, 0.75)
             control.brake = np.clip(float(brake_traj), 0, 1)
         elif PLANNER_TYPE == 'only_ctrl':
-            self.pid_metadata = metadata
-            self.pid_metadata['agent'] = 'only_ctrl'
+            # self.pid_metadata = metadata
+            # self.pid_metadata['agent'] = 'only_ctrl'
             control.steer = np.clip(float(steer_ctrl), -1, 1)
             control.throttle = np.clip(float(throttle_ctrl), 0, 0.75)
             control.brake = np.clip(float(brake_ctrl), 0, 1)
         elif PLANNER_TYPE == 'merge_ctrl_traj':
-            self.pid_metadata = metadata_traj
-            self.pid_metadata['agent'] = 'merge_ctrl_traj'
+            # self.pid_metadata = metadata_traj
+            # self.pid_metadata['agent'] = 'merge_ctrl_traj'
             alpha = 0.5
             control.steer = np.clip(alpha * steer_traj + (1 - alpha) * steer_ctrl, -1, 1)
             control.throttle = np.clip(alpha * throttle_traj + (1 - alpha) * throttle_ctrl, 0, 0.75)
@@ -494,7 +494,7 @@ class TCPAgentNode(Node):
         if control.brake > 0.5:
             control.throttle = 0.0
 
-        # self.get_logger().warning(f"[PUB CONTROL] steer={control.steer}, throttle={control.throttle}, brake={control.brake}") #debug
+        self.get_logger().warning(f"[PUB CONTROL] step={self.step}, steer={control.steer}, throttle={control.throttle}, brake={control.brake}") #debug
         control.step = self.step
 
         T_pub_start = time.time()

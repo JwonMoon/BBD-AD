@@ -6,7 +6,7 @@ export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/B2D_Demo/B2D_tcp/Bench2Dr
 
 export CKPT_PATH='./../Bench2DriveZoo/ckpts/tcp_b2d.ckpt'
 export SAVE_PATH='./../../jw_ws/dual_eval'
-export DEBUG_MODE=0
+export DEBUG_MODE=1
 export IMG_INPUT='compressed'
 export IMG_K=0.65
 export LEADERBOARD_ROOT=leaderboard
@@ -17,7 +17,7 @@ mkdir -p $SAVE_PATH
 
 # ==== 백본 노드 실행 ====
 echo "[RUN] Starting TCPBackboneNode..."
-/usr/bin/python3 ${LEADERBOARD_ROOT}/team_code/final_tcp_backbone_node_FPS.py \
+/usr/bin/python3 ${LEADERBOARD_ROOT}/team_code/final_tcp_backbone_node_container_FPS.py \
   --ckpt-path=${CKPT_PATH} \
   --save-path=${SAVE_PATH} \
   --debug-mode=${DEBUG_MODE} \
@@ -26,13 +26,7 @@ echo "[RUN] Starting TCPBackboneNode..."
 
 BACKBONE_PID=$!
 
-# ==== 릴레이 노드 실행 ====
-echo "[RUN] Starting TCPControlRelay..."
-/usr/bin/python3 ${LEADERBOARD_ROOT}/team_code/final_tcp_control_relay_FPS.py &
-
-RELAY_PID=$!
-
 # ==== 종료 감시 ====
-trap "echo 'Stopping...'; kill $BACKBONE_PID $RELAY_PID; wait" SIGINT SIGTERM
+trap "echo 'Stopping...'; kill $BACKBONE_PID; wait" SIGINT SIGTERM
 
 wait
