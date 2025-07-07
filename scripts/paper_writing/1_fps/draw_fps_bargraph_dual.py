@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import numpy as np  
 
 # 한글 폰트 설정
 plt.rcParams['font.family'] = 'Baekmuk Batang'
@@ -10,23 +9,12 @@ plt.rcParams['axes.unicode_minus'] = False
 
 # FPS 데이터
 data = {
-    "Hz": [30, 30, 30, 20, 20, 20, 10, 10, 10],
-    "실행 환경": ["단일 보드", "이중 컨테이너", "이중 보드"] * 3,
-    "평균 FPS": [11.76, 14.036, 13.504, 11.757, 14.056, 13.714, 10.006, 10.018, 10.02],
-    "표준편차": [0.066, 0.032, 0.068, 0.061, 0.044, 0.15, 0.004, 0.005, 0.007], 
+    "Hz": [30, 30, 20, 20, 10, 10],
+    "실행 환경": ["단일 보드", "이중 보드"] * 3,
+    "평균 FPS": [11.76, 13.08, 11.76, 13.14, 10.01, 10.11],
 }
 
 df = pd.DataFrame(data)
-
-# # Seaborn 색상 팔레트 가져오기
-# palette = sns.color_palette("pastel")
-# env_order = ["단일 보드", "이중 컨테이너", "이중 보드"]
-# hz_list = sorted(df['Hz'].unique())
-# x = np.arange(len(hz_list))
-# bar_width = 0.25
-
-# # 막대 그래프 수동 생성
-plt.figure(figsize=(8, 6))
 
 # 시각화
 plt.figure(figsize=(8, 6))
@@ -37,8 +25,8 @@ barplot = sns.barplot(
     data=df,
     palette="pastel",
     capsize=0.1,
-    errwidth=1.5,
-    errorbar=("sd", df["표준편차"])  # seaborn>=0.12 이상에서 사용 가능
+    # err_kws={'linewidth': 1.5}
+    errorbar=None  # 표준편차 표시 안 함
 )
 
 # 막대 위에 수치 표시

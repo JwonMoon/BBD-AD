@@ -8,28 +8,25 @@ plt.rcParams['axes.unicode_minus'] = False
 
 # 데이터
 hz_list = [10, 20, 30]
-frames = [50, 100, 200, 300]
+frames = [50, 100, 200]
 
 data = {
-    10: {"single": [45, 95, 195, 294], "container": [46, 96, 196, 296], "dual": [46, 96, 196, 296]},
-    20: {"single": [22, 54, 109, 164], "container": [26, 62, 131, 201], "dual": [26, 59, 129, 194]},
-    30: {"single": [13, 32, 68, 108], "container": [15, 37, 83, 131], "dual": [15, 38, 81, 127]},
+    10: {"single": [45, 95, 195], "dual": [46, 96, 196]},
+    20: {"single": [22, 54, 109], "dual": [26, 59, 129]},
+    30: {"single": [13, 32, 68], "dual": [15, 38, 81]},
 }
 
 for hz in hz_list:
     single = data[hz]["single"]
-    container = data[hz]["container"]
     dual = data[hz]["dual"]
 
     # 손실률 = 100 - 수신률
     single_loss = [100 - (r / f * 100) for r, f in zip(single, frames)]
-    container_loss = [100 - (r / f * 100) for r, f in zip(container, frames)]
     dual_loss = [100 - (r / f * 100) for r, f in zip(dual, frames)]
 
     plt.figure()
-    plt.plot(frames, single_loss, marker='o', label='(a)단일 보드', linewidth=1.5, linestyle='solid')
-    plt.plot(frames, container_loss, marker='x', label='(b)분산 컨테이너', linewidth=1.5, linestyle='dashed')
-    plt.plot(frames, dual_loss, marker='^', label='(c)분산 보드',  linewidth=1.5, linestyle='dotted')
+    plt.plot(frames, single_loss, marker='o', label='단일 보드')
+    plt.plot(frames, dual_loss, marker='o', label='분산 보드')
     # plt.title(f'{hz}Hz 입력 주기에서의 Frame 손실률 비교')
     plt.xlabel('총 발행 프레임 수')
     plt.ylabel('손실률 (%)')
