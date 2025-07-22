@@ -18,8 +18,6 @@ import time
 import py_trees
 import carla
 import threading
-import os
-import csv
 
 from srunner.scenariomanager.carla_data_provider import CarlaDataProvider
 from srunner.scenariomanager.timer import GameTime
@@ -29,14 +27,7 @@ from leaderboard.autoagents.agent_wrapper import AgentWrapperFactory, AgentError
 from leaderboard.envs.sensor_interface import SensorReceivedNoData
 from leaderboard.utils.result_writer import ResultOutputProvider
 
-#jw) to ROS node
-import rclpy
-from rclpy.node import Node
-from rclpy.qos import QoSProfile
-from carla_msgs.msg import CarlaEgoVehicleControl
 
-#jw) to ROS node
-# class ScenarioManager(Node):
 class ScenarioManager(object):
 
     """
@@ -142,7 +133,7 @@ class ScenarioManager(object):
         """
         while self._running:
             self.scenario.build_scenarios(self.ego_vehicles[0], debug=debug)
-            # self.scenario.spawn_parked_vehicles(self.ego_vehicles[0]) #jw
+            self.scenario.spawn_parked_vehicles(self.ego_vehicles[0])
             time.sleep(1)
 
     def run_scenario(self):
@@ -166,108 +157,79 @@ class ScenarioManager(object):
         self._scenario_thread = threading.Thread(target=self.build_scenarios_loop, args=(self._debug_mode > 0, ))
         self._scenario_thread.start()
 
-        # while self._running:
-        #     self._tick_scenario()
-        # while True:
-        #     if not self._running:
-        #         print("[ScenarioManager] self._running == False !!")
-        #         return
-        #     self._tick_scenario()
+        while self._running:
+            self._tick_scenario()
 
-    def _tick_scenario(self, ego_action):
+    def _tick_scenario(self):
         """
         Run next tick of scenario and the agent and tick the world.
         """
-        print("[scenario_manager] 1. _tick_scenario() called")
-        tick_start_time = time.time()
-        
-        # apply_control
-        try:
-            # self._agent_watchdog.resume()
-            # self._agent_watchdog.update()
-            # ego_action = self._agent_wrapper() # call run_step
-            print("[scenario_manager] 2. get ego_action:", ego_action)
-            # self._agent_watchdog.pause()
-
-        # Special exception inside the agent that isn't caused by the agent
-        except SensorReceivedNoData as e:
-            raise RuntimeError(e)
-
-        except Exception as e:
-            raise AgentError(e)
-
-        # self._watchdog.resume()
-        print("[scenario_manager] 3. apply control")
-        carla_control_start_time = time.time()
-        self.ego_vehicles[0].apply_control(ego_action)
-        carla_control_end_time = time.time()
-
-        # Tick scenario. Add the ego control to the blackboard in case some behaviors want to change it
-        py_trees.blackboard.Blackboard().set("AV_control", ego_action, overwrite=True)
-        self.scenario_tree.tick_once()
-
-        if self._debug_mode > 1:
-            self.compute_duration_time()
-
-            # Update live statistics
-            self._statistics_manager.compute_route_statistics(
-                self.route_index,
-                self.scenario_duration_system,
-                self.scenario_duration_game,
-                failure_message=""
-            )
-            self._statistics_manager.write_live_results(
-                self.route_index,
-                self.ego_vehicles[0].get_velocity().length(),
-                ego_action,
-                self.ego_vehicles[0].get_location()
-            )
-
-        if self._debug_mode > 2:
-            print("\n")
-            print("[Tree Debug] scenario_tree status:", self.scenario_tree.status)
-            py_trees.display.print_ascii_tree(self.scenario_tree, show_status=True)
-            sys.stdout.flush()
-
-        if self.scenario_tree.status != py_trees.common.Status.RUNNING:
-            self._running = False
-            print(f"self.scenario_tree.status = {self.scenario_tree.status}")
-            print("@@@@ self._running = False @@@@")
-
-        ego_trans = self.ego_vehicles[0].get_transform()
-        self._spectator.set_transform(carla.Transform(ego_trans.location + carla.Location(z=70),
-                                                        carla.Rotation(pitch=-90)))
-    
-        # tick_simulatrion
-        print(f"self._running = {self._running}")
-        print(f"self.get_running_status() = {self.get_running_status()}")
-
         if self._running and self.get_running_status():
-            # CarlaDataProvider.get_world().tick(self._timeout)
-            #jw) debug
-            print(f"CarlaDataProvider.get_world().tick(self._timeout)")
-            carla_tick_start_time = time.time() 
             CarlaDataProvider.get_world().tick(self._timeout)
-            carla_tick_end_time = time.time() 
 
-        print("[scenario_manager] 4. carla get snapshot()")
         timestamp = CarlaDataProvider.get_world().get_snapshot().timestamp
 
         if self._timestamp_last_run < timestamp.elapsed_seconds and self._running:
             self._timestamp_last_run = timestamp.elapsed_seconds
 
-            # self._watchdog.update()
+            self._watchdog.update()
             # Update game time and actor information
             GameTime.on_carla_tick(timestamp)
             CarlaDataProvider.on_carla_tick()
             self.tick_count += 1
-            # self._watchdog.pause()
+            self._watchdog.pause()
 
             if self.tick_count > 4000:
                 raise TickRuntimeError("RuntimeError, tick_count > 4000")
-           
-        tick_end_time = time.time()
-        return tick_start_time, carla_control_start_time, carla_control_end_time, carla_tick_start_time, carla_tick_end_time, tick_end_time
+
+            try:
+                self._agent_watchdog.resume()
+                self._agent_watchdog.update()
+                ego_action = self._agent_wrapper()
+                self._agent_watchdog.pause()
+
+            # Special exception inside the agent that isn't caused by the agent
+            except SensorReceivedNoData as e:
+                raise RuntimeError(e)
+
+            except Exception as e:
+                raise AgentError(e)
+
+            self._watchdog.resume()
+            self.ego_vehicles[0].apply_control(ego_action)
+
+            # Tick scenario. Add the ego control to the blackboard in case some behaviors want to change it
+            py_trees.blackboard.Blackboard().set("AV_control", ego_action, overwrite=True)
+            self.scenario_tree.tick_once()
+
+            if self._debug_mode > 1:
+                self.compute_duration_time()
+
+                # Update live statistics
+                self._statistics_manager.compute_route_statistics(
+                    self.route_index,
+                    self.scenario_duration_system,
+                    self.scenario_duration_game,
+                    failure_message=""
+                )
+                self._statistics_manager.write_live_results(
+                    self.route_index,
+                    self.ego_vehicles[0].get_velocity().length(),
+                    ego_action,
+                    self.ego_vehicles[0].get_location()
+                )
+
+            if self._debug_mode > 2:
+                print("\n")
+                py_trees.display.print_ascii_tree(self.scenario_tree, show_status=True)
+                sys.stdout.flush()
+
+            if self.scenario_tree.status != py_trees.common.Status.RUNNING:
+                self._running = False
+
+            ego_trans = self.ego_vehicles[0].get_transform()
+            self._spectator.set_transform(carla.Transform(ego_trans.location + carla.Location(z=70),
+                                                          carla.Rotation(pitch=-90)))
 
     def get_running_status(self):
         """
@@ -275,10 +237,7 @@ class ScenarioManager(object):
            bool: False if watchdog exception occured, True otherwise
         """
         if self._watchdog:
-            # return self._watchdog.get_status()
-            status = self._watchdog.get_status()
-            print(f"[ScenarioManager] get_running_status() -> {status}")
-            return status
+            return self._watchdog.get_status()
         return True
 
     def stop_scenario(self):
@@ -305,12 +264,8 @@ class ScenarioManager(object):
 
         # Make sure the scenario thread finishes to avoid blocks
         self._running = False
-        print(f"self.scenario_tree.status = {self.scenario_tree.status}")
-        print("@@@@ self._running = False @@@@")
-
-        if self._scenario_thread is not None: # jw
-            self._scenario_thread.join()
-            self._scenario_thread = None
+        self._scenario_thread.join()
+        self._scenario_thread = None
 
     def compute_duration_time(self):
         """

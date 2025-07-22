@@ -37,12 +37,12 @@ from srunner.scenariomanager.watchdog import Watchdog
 from leaderboard.scenarios.scenario_manager_async import ScenarioManager
 from leaderboard.scenarios.route_scenario import RouteScenario
 from leaderboard.envs.sensor_interface import SensorConfigurationInvalid
-from leaderboard.autoagents.agent_wrapper import AgentError, validate_sensor_configuration, TickRuntimeError
+from leaderboard.autoagents.agent_wrapper_w_bridge import AgentError, validate_sensor_configuration, TickRuntimeError
 from leaderboard.utils.statistics_manager import StatisticsManager, FAILURE_MESSAGES
 from leaderboard.utils.route_indexer import RouteIndexer
 # from leaderboard.utils.route_manipulation import downsample_route # 다운샘플링용
-from leaderboard.autoagents.ros_base_agent import BridgeHelper, ROSBaseAgent
-from leaderboard.autoagents.autonomous_agent import AutonomousAgent
+from leaderboard.autoagents.ros_base_agent_w_bridge import BridgeHelper, ROSBaseAgent
+from leaderboard.autoagents.autonomous_agent_w_bridge import AutonomousAgent
 
 # jw
 import rclpy

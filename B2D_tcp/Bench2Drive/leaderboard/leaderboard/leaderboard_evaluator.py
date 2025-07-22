@@ -23,13 +23,6 @@ import sys
 import carla
 import signal
 
-import socket
-import subprocess
-import time
-from datetime import datetime
-# jw
-from xml.etree import ElementTree as ET
-
 from srunner.scenariomanager.carla_data_provider import *
 from srunner.scenariomanager.timer import GameTime
 from srunner.scenariomanager.watchdog import Watchdog
@@ -40,24 +33,11 @@ from leaderboard.envs.sensor_interface import SensorConfigurationInvalid
 from leaderboard.autoagents.agent_wrapper import AgentError, validate_sensor_configuration, TickRuntimeError
 from leaderboard.utils.statistics_manager import StatisticsManager, FAILURE_MESSAGES
 from leaderboard.utils.route_indexer import RouteIndexer
-# from leaderboard.utils.route_manipulation import downsample_route # 다운샘플링용
-from leaderboard.autoagents.ros_base_agent import BridgeHelper, ROSBaseAgent
-from leaderboard.autoagents.autonomous_agent import AutonomousAgent
-
-# jw
-import rclpy
-from rclpy.node import Node
-from rclpy.qos import QoSProfile, DurabilityPolicy
-from carla_msgs.msg import CarlaRoute, CarlaGnssRoute
-from diagnostic_msgs.msg import KeyValue
-from geometry_msgs.msg import Point, Pose, Quaternion
-from sensor_msgs.msg import NavSatFix
-from tcp_msgs.msg import TCPBranchOutput
-import pathlib, csv
-
 import atexit
-
-SAVE_PATH = os.environ.get('SAVE_PATH', None)
+import subprocess
+import time
+import random
+from datetime import datetime
 
 sensors_to_icons = {
     'sensor.camera.rgb':        'carla_camera',
@@ -97,209 +77,6 @@ def get_weather_id(weather_conditions):
             return case.items()[0][1]
     return None
 
-class EvaluatorAgent(Node, ROSBaseAgent):
-    ROS_VERSION = 2
-
-    def __init__(self, carla_host, carla_port, debug=False):
-        # rclpy 초기화
-        rclpy.init(args=None)
-        # ROSBaseAgent.__init__(self, self.ROS_VERSION, carla_host, carla_port, debug)
-        # ROSBaseAgent의 브릿지만 초기화
-        AutonomousAgent.__init__(self, carla_host, carla_port, debug)  # ROSBaseAgent.__init__ 건너뜀
-        Node.__init__(self, 'evaluator_node')
-        
-        self._control_subscriber = self.create_subscription(TCPBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, QoSProfile(depth=1))
-
-        self._path_publisher = self.create_publisher(CarlaRoute, "/carla/hero/global_plan", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
-        self._path_gps_publisher = self.create_publisher(CarlaGnssRoute, "/carla/hero/global_plan_gps", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
-
-        self._scenario_manager = None
-        self.control = None
-        self.is_agent_ready = False
-
-        if debug and SAVE_PATH:
-            now = datetime.now()
-            string = f"tcp_agent_{now.strftime('%m_%d_%H_%M_%S')}"
-            self.save_path = pathlib.Path(SAVE_PATH) / string
-            self.save_path.mkdir(parents=True, exist_ok=True)
-
-            self.log_file = self.save_path / 'evaluator_tcp_timing.csv'
-            with open(self.log_file, 'w', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow([
-                    'step', 'T_tick_start', 
-                    'T_car_ctrl_start', 'T_car_ctrl_end', 
-                    'T_car_tick_start', 'T_car_tick_end', 
-                    'T_tick_end'
-                ])
-
-    def sensors(self): #original
-	    return [
-				{
-					'type': 'sensor.camera.rgb',
-					'x': 0.80, 'y': 0.0, 'z': 1.60,
-					'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-					# 'width': 1600, 'height': 900, 'fov': 70,
-					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
-					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
-					# 'width': 1120, 'height': 630, 'fov': 70, #0.7
-					'width': 1040, 'height': 585, 'fov': 70, #0.65
-					# 'width': 960, 'height': 540, 'fov': 70, #0.6
-					# 'width': 800, 'height': 450, 'fov': 70, #0.5
-					# 'width': 480, 'height': 270, 'fov': 70, #0.3
-					# 'width': 160, 'height': 90, 'fov': 70, #0.1
-					'id': 'CAM_FRONT'
-					},
-				{
-					'type': 'sensor.camera.rgb',
-					'x': 0.27, 'y': -0.55, 'z': 1.60,
-					'roll': 0.0, 'pitch': 0.0, 'yaw': -55.0,
-					# 'width': 1600, 'height': 900, 'fov': 70,
-					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
-					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
-					# 'width': 1120, 'height': 630, 'fov': 70, #0.7
-					'width': 1040, 'height': 585, 'fov': 70, #0.65
-					# 'width': 960, 'height': 540, 'fov': 70, #0.6
-					# 'width': 800, 'height': 450, 'fov': 70, #0.5
-					# 'width': 480, 'height': 270, 'fov': 70, #0.3
-					# 'width': 160, 'height': 90, 'fov': 70, #0.1
-					'id': 'CAM_FRONT_LEFT'
-					},
-				{
-					'type': 'sensor.camera.rgb',
-					'x': 0.27, 'y': 0.55, 'z': 1.60,
-					'roll': 0.0, 'pitch': 0.0, 'yaw': 55.0,
-					# 'width': 1600, 'height': 900, 'fov': 70,
-					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
-					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
-					# 'width': 1120, 'height': 630, 'fov': 70, #0.7
-					'width': 1040, 'height': 585, 'fov': 70, #0.65
-					# 'width': 960, 'height': 540, 'fov': 70, #0.6
-					# 'width': 800, 'height': 450, 'fov': 70, #0.5
-					# 'width': 480, 'height': 270, 'fov': 70, #0.3
-					# 'width': 160, 'height': 90, 'fov': 70, #0.1
-					'id': 'CAM_FRONT_RIGHT'
-					},
-				# imu
-				{
-					'type': 'sensor.other.imu',
-					'x': -1.4, 'y': 0.0, 'z': 0.0,
-					'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-					'sensor_tick': 0.05,
-					'id': 'IMU'
-					},
-				# gps
-				{
-					'type': 'sensor.other.gnss',
-					'x': -1.4, 'y': 0.0, 'z': 0.0,
-					'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-					'sensor_tick': 0.01,
-					'id': 'GPS'
-					}]
-				# # speed
-				# {
-				# 	'type': 'sensor.speedometer',
-				# 	'reading_frequency': 20,
-				# 	'id': 'SPEED'
-				# 	},
-                # {	
-                #     'type': 'sensor.camera.rgb',
-                #     'x': 0.0, 'y': 0.0, 'z': 50.0,
-                #     'roll': 0.0, 'pitch': -90.0, 'yaw': 0.0,
-                #     'width': 512, 'height': 512, 'fov': 5 * 10.0,
-                #     'id': 'bev'
-                # }]
-    
-    #ros2_agent function
-    @staticmethod
-    def get_ros_version():
-        return EvaluatorAgent.ROS_VERSION
-    
-    def destroy(self):
-        self.get_logger().info("Destroying EvaluatorAgent")
-        # super().destroy()
-        super(AutonomousAgent, self).destroy()  # ROSBaseAgent의 destroy 건너뛰기
-        self.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
-    
-    def set_global_plan(self, global_plan_gps, global_plan_world_coord):
-        super(EvaluatorAgent, self).set_global_plan(global_plan_gps, global_plan_world_coord)
-        print(f"Global plan set with global_plan_gps / len: {len(global_plan_gps)} waypoints")
-        print(f"Global plan set with global_plan_world_coord / len : {len(global_plan_world_coord)} waypoints")
-
-        path = CarlaRoute()
-        for wp in global_plan_world_coord:  # 직접 입력 사용
-            path.road_options.append(wp[1])
-            pose = BridgeHelper.carla2ros_pose(
-                wp[0].location.x, wp[0].location.y, wp[0].location.z,
-                wp[0].rotation.roll, wp[0].rotation.pitch, wp[0].rotation.yaw,
-                to_quat=True
-            )
-            path.poses.append(
-                Pose(position=Point(**pose["position"]), orientation=Quaternion(**pose["orientation"])))
-        self._path_publisher.publish(path)
-        print(f"Publishing global plan: poses={len(path.poses)}, road_options={len(path.road_options)}")
- 
-        path_gps = CarlaGnssRoute()
-        for wp in global_plan_gps:  # 직접 입력 사용
-            path_gps.road_options.append(wp[1])
-            path_gps.coordinates.append(
-                NavSatFix(latitude=wp[0]["lat"], longitude=wp[0]["lon"], altitude=wp[0]["z"]))
-        self._path_gps_publisher.publish(path_gps)
-        print(f"Publishing global plan gps: poses={len(path_gps.coordinates)}, road_options={len(path_gps.road_options)}")
-        
-    def set_scenario_manager(self, scenario_manager):
-        self._scenario_manager = scenario_manager
-
-    #ros_base_agent fuction
-    def run_step(self):
-        timeout = 1.0
-        start_time = time.time()
-        while self.control is None and (time.time() - start_time) < timeout:
-            # print(f"@@ [run_setp] get sleep, self.control={self.control}")
-            rclpy.spin_once(self, timeout_sec=0.001)
-
-        if self.control:
-            control = self.control
-            self.control = None
-            return control
-        else:
-            print("[EvaluatorAgent] No control received in time. Returning default VehicleControl.")
-            return carla.VehicleControl()  # 기본적으로 멈춘 상태
-
-    def _vehicle_control_cmd_callback(self, msg):
-        if self.is_agent_ready is False:
-            self.is_agent_ready = True
-
-        self.control = carla.VehicleControl(
-            steer=msg.steer, 
-            throttle=msg.throttle, 
-            brake=msg.brake,
-            hand_brake=msg.hand_brake, 
-            reverse=msg.reverse,
-            manual_gear_shift=msg.manual_gear_shift, 
-            gear=msg.gear
-        )
-        
-        if self._scenario_manager is not None:
-            print(f"[Evaluator ROS2] Received control_cmd")
-            try:
-                T_tick_start, T_car_ctrl_start, T_car_ctrl_end, T_car_tick_start, T_car_tick_end,T_tick_end = self._scenario_manager._tick_scenario(self.control)
-            except Exception as e:
-                print(f"tick_callback error: {e}")
-
-        # timing log 저장
-        if self.log_file:
-            with open(self.log_file, 'a', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow([
-                    msg.step,
-                    T_tick_start, T_car_ctrl_start, T_car_ctrl_end, T_car_tick_start, T_car_tick_end, T_tick_end
-                ])
-
-        # if hasattr(self, '_scenario_manager'):
-        #     self._scenario_manager._tick_scenario()
 class LeaderboardEvaluator(object):
     """
     Main class of the Leaderboard. Everything is handled from here,
@@ -308,7 +85,7 @@ class LeaderboardEvaluator(object):
 
     # Tunable parameters
     client_timeout = 300.0  # in seconds
-    # frame_rate = 20.0      # in Hz
+    frame_rate = 20.0      # in Hz
 
     def __init__(self, args, statistics_manager):
         """
@@ -322,9 +99,13 @@ class LeaderboardEvaluator(object):
         self.sensor_icons = []
         self.agent_instance = None
         self.route_scenario = None
-        self.frame_rate = 10.0      # in Hz #jw
 
         self.statistics_manager = statistics_manager
+
+        # This is the ROS1 bridge server instance. This is not encapsulated inside the ROS1 agent because the same
+        # instance is used on all the routes (i.e., the server is not restarted between routes). This is done
+        # to avoid reconnection issues between the server and the roslibpy client.
+        self._ros1_server = None
 
         # Setup the simulation
         self.client, self.client_timeout, self.traffic_manager = self._setup_simulation(args)
@@ -334,11 +115,10 @@ class LeaderboardEvaluator(object):
             if LooseVersion(dist.version) < LooseVersion('0.9.10'):
                 raise ImportError("CARLA version 0.9.10.1 or newer required. CARLA version found: {}".format(dist))
 
-        # Load agent 
-        #jw)
-        # module_name = os.path.basename(args.agent).split('.')[0]
-        # sys.path.insert(0, os.path.dirname(args.agent))
-        # self.module_agent = importlib.import_module(module_name)
+        # Load agent
+        module_name = os.path.basename(args.agent).split('.')[0]
+        sys.path.insert(0, os.path.dirname(args.agent))
+        self.module_agent = importlib.import_module(module_name)
 
         # Create the ScenarioManager
         self.manager = ScenarioManager(args.timeout, self.statistics_manager, args.debug)
@@ -439,7 +219,7 @@ class LeaderboardEvaluator(object):
                     synchronous_mode = True,
                     fixed_delta_seconds = 1.0 / self.frame_rate,
                     deterministic_ragdolls = True,
-                    spectator_as_ego = False #jw
+                    spectator_as_ego = False
                 )
                 client.get_world().apply_settings(settings)
                 print(f"load_world success , attempts={attempts}", flush=True)
@@ -569,21 +349,19 @@ class LeaderboardEvaluator(object):
         try:
             self._agent_watchdog = Watchdog(args.timeout)
             self._agent_watchdog.start()
+            agent_class_name = getattr(self.module_agent, 'get_entry_point')()
+            agent_class_obj = getattr(self.module_agent, agent_class_name)
 
-            # agent_class_name = getattr(self.module_agent, 'get_entry_point')()
-            # agent_class_obj = getattr(self.module_agent, agent_class_name)
+            # Start the ROS1 bridge server only for ROS1 based agents.
+            if getattr(agent_class_obj, 'get_ros_version')() == 1 and self._ros1_server is None:
+                from leaderboard.autoagents.ros1_agent import ROS1Server
+                self._ros1_server = ROS1Server()
+                self._ros1_server.start()
 
-            # self.agent_instance = agent_class_obj(args.host, args.port, args.debug)
-            # self.agent_instance.set_global_plan(self.route_scenario.gps_route, self.route_scenario.route)
-            # args.agent_config = args.agent_config + '+' + save_name
-            # self.agent_instance.setup(args.agent_config)
-            #jw)
-            self.agent_instance = EvaluatorAgent(args.host, args.port, args.debug > 0)
-            
-            # print("RouteScenario.gps_route:", self.route_scenario.gps_route)
-            # print("RouteScenario.route:", self.route_scenario.route)
+            self.agent_instance = agent_class_obj(args.host, args.port, args.debug)
             self.agent_instance.set_global_plan(self.route_scenario.gps_route, self.route_scenario.route)
-            self.agent_instance.set_scenario_manager(self.manager)  # jw) change run_step()
+            args.agent_config = args.agent_config + '+' + save_name
+            self.agent_instance.setup(args.agent_config)
 
             # Check and store the sensors
             if not self.sensors:
@@ -597,7 +375,7 @@ class LeaderboardEvaluator(object):
                 self.statistics_manager.write_statistics()
 
                 self.sensors_initialized = True
-            
+
             self._agent_watchdog.stop()
             self._agent_watchdog = None
 
@@ -629,26 +407,10 @@ class LeaderboardEvaluator(object):
             # Load scenario and run it
             if args.record:
                 self.client.start_recorder("{}/{}_rep{}.log".format(args.record, config.name, config.repetition_index))
-                
-            print("\033[1m>>> load_scenario\033[0m", flush=True)
             self.manager.load_scenario(self.route_scenario, self.agent_instance, config.index, config.repetition_index)
+            CarlaDataProvider.get_world().tick()
             self.manager.tick_count = 0
-            
-
-            print(f"\033[1m>>> >>> self.agent_instance.is_agent_ready: {self.agent_instance.is_agent_ready}\033[0m", flush=True)
-            print("\033[1m>>> run_scenario\033[0m", flush=True)
             self.manager.run_scenario()
-            # jw) orin-warm-up
-            while True:
-                if self.agent_instance.is_agent_ready is True:
-                    break
-                else:
-                    # ROS 콜백 처리를 위해 spin_once 호출
-                    rclpy.spin_once(self.agent_instance, timeout_sec=0.01)
-                    # print("\033[1m>>> >>> carla tick before run_scenario\033[0m", flush=True)
-                    CarlaDataProvider.get_world().tick()
-                    # time.sleep(0.1)
-            rclpy.spin(self.agent_instance)
 
         except AgentError:
             # The agent has failed -> stop the route
@@ -714,13 +476,17 @@ class LeaderboardEvaluator(object):
             # Run the scenario
             config = route_indexer.get_next_config()
             crashed = self._load_and_run_scenario(args, config)
-            print("--crashed:", crashed, flush=True)
+            print(crashed, flush=True)
             # Save the progress and write the route statistics
             self.statistics_manager.save_progress(route_indexer.index, route_indexer.total)
             self.statistics_manager.write_statistics()
             if crashed:
                 print(f'{route_indexer.index} crash, [{route_indexer.index}/{route_indexer.total}], please restart', flush=True)
                 break
+
+        # Shutdown ROS1 bridge server if necessary
+        if self._ros1_server is not None:
+            self._ros1_server.shutdown()
 
         # Go back to asynchronous mode
         self._reset_world_settings()
@@ -756,7 +522,7 @@ def main():
                         help='Run with debug output', default=0)
     parser.add_argument('--record', type=str, default='',
                         help='Use CARLA recording feature to create a recording of the scenario')
-    parser.add_argument('--timeout', default=100.0, type=float,
+    parser.add_argument('--timeout', default=600.0, type=float,
                         help='Set the CARLA client timeout value in seconds')
 
     # simulation setup

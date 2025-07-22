@@ -102,8 +102,8 @@ class AutonomousAgent(object):
         """
         Execute the agent call, e.g. agent()
         Returns the next vehicle controls
-        # """
-        # input_data = self.sensor_interface.get_data(GameTime.get_frame()) #orig
+        """
+        input_data = self.sensor_interface.get_data(GameTime.get_frame())
 
         timestamp = GameTime.get_time()
 
@@ -116,8 +116,7 @@ class AutonomousAgent(object):
         print('=== [Agent] -- Wallclock = {} -- System time = {} -- Game time = {} -- Ratio = {}x'.format(
             str(wallclock)[:-3], format(wallclock_diff, '.3f'), format(timestamp, '.3f'), format(sim_ratio, '.3f')), flush=True)
 
-        # control = self.run_step(input_data, timestamp) # orig
-        control = self.run_step() #jw
+        control = self.run_step(input_data, timestamp)
         control.manual_gear_shift = False
 
         return control
