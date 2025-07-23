@@ -286,7 +286,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
     def set_scenario_manager(self, scenario_manager):
         self._scenario_manager = scenario_manager
 
-    #ros_base_agent fuction
+    #ros_base_agent fuction override
     def run_step(self):
         timeout = 1.0
         start_time = time.time()
