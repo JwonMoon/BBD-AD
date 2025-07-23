@@ -1,20 +1,14 @@
 B2D/
-*.txt
 *.zip
 *.mp4
 *.png
 *.csv
-*/Bench2Drive/assets
 */Bench2Drive/eval_v1
-*/Bench2Drive/Bench2DriveZoo
 */Bench2DriveZoo/ckpts
 */Bench2DriveZoo/.git
 */Bench2DriveZoo/.gitignore
-*/LICENSE
-*/README.md
-*/requirement.txt
-*/tools
-*/docs
+*/Bench2Drive/.git
+*/Bench2Drive/.gitignore
 jw_ws/*
 *.pyc
 */__pycache__/
@@ -23,3 +17,4 @@ jw_ws/*
 */log
 *.db3
 *.npy
+
