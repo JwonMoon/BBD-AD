@@ -7,7 +7,7 @@ folders=("tcp_50pts" "tcp_merge_50pts" "uniad_50pts" "uniad_tiny_50pts" "vad_50p
 for folder in "${folders[@]}"; do
     echo "Processing folder: $folder"
     
-    python scripts/draw_metrics.py "/root/shared_dir/B2D_Demo/jw_ws/eval_v1/$folder/metric_info.json" "/root/shared_dir/B2D_Demo/jw_ws/output/metrics/${folder}_metrics.png"
+    python scripts/draw_metrics.py "/root/shared_dir/B2D_Demo/my_ws/eval_v1/$folder/metric_info.json" "/root/shared_dir/B2D_Demo/my_ws/output/metrics/${folder}_metrics.png"
     
     echo "Completed for $folder"
     echo "-------------------"

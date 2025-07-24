@@ -1,0 +1,262 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python3
+-- Found std_msgs: 2.0.5 (/opt/ros/foxy/share/std_msgs/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Found rosidl_adapter: 1.3.1 (/opt/ros/foxy/share/rosidl_adapter/cmake)
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "1.1.1f")  
+-- Found FastRTPS: /opt/ros/foxy/include  
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rosidl_default_generators: 1.0.1 (/opt/ros/foxy/share/rosidl_default_generators/cmake)
+-- Found PythonInterp: /usr/bin/python3 (found version "3.8.10") 
+-- Found ament_cmake_ros: 0.9.2 (/opt/ros/foxy/share/ament_cmake_ros/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3.5") 
+-- Found python_cmake_module: 0.8.1 (/opt/ros/foxy/share/python_cmake_module/cmake)
+-- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.8.so (found suitable version "3.8.10", minimum required is "3.5") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python3
+-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8
+-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so
+-- Found PythonExtra: .so  
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs
+[  2%] [34m[1mGenerating C code for ROS interfaces[0m
+[35m[1mScanning dependencies of target bbd_msgs__cpp[0m
+[  4%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[  4%] Built target bbd_msgs__cpp
+[  6%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[  8%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[ 10%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[35m[1mScanning dependencies of target bbd_msgs__rosidl_generator_c[0m
+[ 12%] [32mBuilding C object CMakeFiles/bbd_msgs__rosidl_generator_c.dir/rosidl_generator_c/bbd_msgs/msg/detail/tick_trigger__functions.c.o[0m
+[ 14%] [32mBuilding C object CMakeFiles/bbd_msgs__rosidl_generator_c.dir/rosidl_generator_c/bbd_msgs/msg/detail/bbd_backbone_output__functions.c.o[0m
+[ 17%] [32mBuilding C object CMakeFiles/bbd_msgs__rosidl_generator_c.dir/rosidl_generator_c/bbd_msgs/msg/detail/bbd_branch_output__functions.c.o[0m
+[ 19%] [32m[1mLinking C shared library libbbd_msgs__rosidl_generator_c.so[0m
+[ 19%] Built target bbd_msgs__rosidl_generator_c
+[ 21%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[ 23%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[35m[1mScanning dependencies of target bbd_msgs__rosidl_typesupport_cpp[0m
+[ 27%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/bbd_msgs/msg/bbd_branch_output__type_support.cpp.o[0m
+[ 27%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/bbd_msgs/msg/bbd_backbone_output__type_support.cpp.o[0m
+[ 29%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/bbd_msgs/msg/tick_trigger__type_support.cpp.o[0m
+[35m[1mScanning dependencies of target bbd_msgs__rosidl_typesupport_fastrtps_cpp[0m
+[ 34%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/bbd_msgs/msg/detail/dds_fastrtps/tick_trigger__type_support.cpp.o[0m
+[ 34%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/bbd_msgs/msg/detail/dds_fastrtps/bbd_branch_output__type_support.cpp.o[0m
+[ 36%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/bbd_msgs/msg/detail/dds_fastrtps/bbd_backbone_output__type_support.cpp.o[0m
+[35m[1mScanning dependencies of target bbd_msgs__rosidl_typesupport_introspection_cpp[0m
+[ 38%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/bbd_msgs/msg/detail/bbd_branch_output__type_support.cpp.o[0m
+[ 40%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/bbd_msgs/msg/detail/bbd_backbone_output__type_support.cpp.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/bbd_msgs/msg/detail/tick_trigger__type_support.cpp.o[0m
+[35m[1mScanning dependencies of target bbd_msgs__rosidl_typesupport_c[0m
+[ 44%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/bbd_msgs/msg/bbd_backbone_output__type_support.cpp.o[0m
+[ 46%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/bbd_msgs/msg/tick_trigger__type_support.cpp.o[0m
+[ 48%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/bbd_msgs/msg/bbd_branch_output__type_support.cpp.o[0m
+[ 51%] [32m[1mLinking CXX shared library libbbd_msgs__rosidl_typesupport_cpp.so[0m
+[35m[1mScanning dependencies of target bbd_msgs__rosidl_typesupport_introspection_c[0m
+[ 53%] [32mBuilding C object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.o[0m
+[ 55%] [32mBuilding C object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.o[0m
+[ 57%] [32mBuilding C object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.o[0m
+[ 59%] [32m[1mLinking CXX shared library libbbd_msgs__rosidl_typesupport_c.so[0m
+[ 59%] Built target bbd_msgs__rosidl_typesupport_cpp
+[ 61%] [32m[1mLinking C shared library libbbd_msgs__rosidl_typesupport_introspection_c.so[0m
+[ 61%] Built target bbd_msgs__rosidl_typesupport_c
+[ 61%] Built target bbd_msgs__rosidl_typesupport_introspection_c
+[ 63%] [32m[1mLinking CXX shared library libbbd_msgs__rosidl_typesupport_introspection_cpp.so[0m
+[ 65%] [32m[1mLinking CXX shared library libbbd_msgs__rosidl_typesupport_fastrtps_cpp.so[0m
+[ 65%] Built target bbd_msgs__rosidl_typesupport_introspection_cpp
+[ 65%] Built target bbd_msgs__rosidl_typesupport_fastrtps_cpp
+[ 68%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[35m[1mScanning dependencies of target bbd_msgs__rosidl_typesupport_fastrtps_c[0m
+[ 72%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/bbd_msgs/msg/detail/bbd_branch_output__type_support_c.cpp.o[0m
+[ 72%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support_c.cpp.o[0m
+[ 74%] [32mBuilding CXX object CMakeFiles/bbd_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/bbd_msgs/msg/detail/tick_trigger__type_support_c.cpp.o[0m
+[ 76%] [32m[1mLinking CXX shared library libbbd_msgs__rosidl_typesupport_fastrtps_c.so[0m
+[ 76%] Built target bbd_msgs__rosidl_typesupport_fastrtps_c
+[35m[1mScanning dependencies of target bbd_msgs[0m
+[ 76%] Built target bbd_msgs
+[35m[1mScanning dependencies of target bbd_msgs__py[0m
+[ 78%] [34m[1mGenerating Python code for ROS interfaces[0m
+[ 78%] Built target bbd_msgs__py
+[35m[1mScanning dependencies of target bbd_msgs__python[0m
+[ 82%] [32mBuilding C object CMakeFiles/bbd_msgs__python.dir/rosidl_generator_py/bbd_msgs/msg/_bbd_backbone_output_s.c.o[0m
+[ 85%] [32mBuilding C object CMakeFiles/bbd_msgs__python.dir/rosidl_generator_py/bbd_msgs/msg/_tick_trigger_s.c.o[0m
+[ 85%] [32mBuilding C object CMakeFiles/bbd_msgs__python.dir/rosidl_generator_py/bbd_msgs/msg/_bbd_branch_output_s.c.o[0m
+[ 87%] [32m[1mLinking C shared library rosidl_generator_py/bbd_msgs/libbbd_msgs__python.so[0m
+[ 87%] Built target bbd_msgs__python
+[35m[1mScanning dependencies of target bbd_msgs__rosidl_typesupport_introspection_c__pyext[0m
+[35m[1mScanning dependencies of target bbd_msgs__rosidl_typesupport_c__pyext[0m
+[35m[1mScanning dependencies of target bbd_msgs__rosidl_typesupport_fastrtps_c__pyext[0m
+[ 89%] [32mBuilding C object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/bbd_msgs/_bbd_msgs_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[ 91%] [32mBuilding C object CMakeFiles/bbd_msgs__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/bbd_msgs/_bbd_msgs_s.ep.rosidl_typesupport_c.c.o[0m
+[ 93%] [32mBuilding C object CMakeFiles/bbd_msgs__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/bbd_msgs/_bbd_msgs_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[ 95%] [32m[1mLinking C shared library rosidl_generator_py/bbd_msgs/bbd_msgs_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so[0m
+[ 97%] [32m[1mLinking C shared library rosidl_generator_py/bbd_msgs/bbd_msgs_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so[0m
+[100%] [32m[1mLinking CXX shared library rosidl_generator_py/bbd_msgs/bbd_msgs_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so[0m
+[100%] Built target bbd_msgs__rosidl_typesupport_c__pyext
+[100%] Built target bbd_msgs__rosidl_typesupport_introspection_c__pyext
+[100%] Built target bbd_msgs__rosidl_typesupport_fastrtps_c__pyext
+-- Install configuration: "Release"
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/ament_index/resource_index/rosidl_interfaces/bbd_msgs
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__functions.c
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__functions.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__functions.c
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__type_support.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__struct.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__type_support.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__functions.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__struct.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__functions.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__type_support.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__struct.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__functions.c
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/rosidl_generator_c__visibility_control.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/bbd_branch_output.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/bbd_backbone_output.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/tick_trigger.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/environment/library_path.sh
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/environment/library_path.dsv
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_generator_c.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_generator_c.so" to ""
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__rosidl_typesupport_fastrtps_c.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__rosidl_typesupport_fastrtps_c.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__rosidl_typesupport_fastrtps_c.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_fastrtps_c.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_fastrtps_c.so" to ""
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/dds_fastrtps
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_fastrtps_cpp.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_fastrtps_cpp.so" to ""
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__type_support.c
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__rosidl_typesupport_introspection_c.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__rosidl_typesupport_introspection_c.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__rosidl_typesupport_introspection_c.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__type_support.c
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_introspection_c.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_introspection_c.so" to ""
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_c.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_c.so" to ""
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__builder.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__traits.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__builder.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__traits.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__builder.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__struct.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__type_support.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__struct.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__traits.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__type_support.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__type_support.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__struct.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/bbd_branch_output.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/bbd_backbone_output.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/tick_trigger.hpp
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg
+-- Up-to-date: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__type_support.cpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__type_support.cpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_branch_output__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/bbd_backbone_output__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__type_support.cpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/include/bbd_msgs/msg/detail/tick_trigger__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_introspection_cpp.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_introspection_cpp.so" to ""
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_cpp.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__rosidl_typesupport_cpp.so" to ""
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/environment/pythonpath.sh
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/environment/pythonpath.dsv
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/__init__.py
+Compiling '/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/__init__.py'...
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/msg
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/msg/_tick_trigger.py
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/msg/__init__.py
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/msg/_bbd_backbone_output.py
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/msg/_bbd_branch_output.py
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/msg/_bbd_backbone_output_s.c
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/msg/_tick_trigger_s.c
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/msg/_bbd_branch_output_s.c
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/bbd_msgs_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/bbd_msgs_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so" to ""
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/bbd_msgs_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/bbd_msgs_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so" to ""
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/bbd_msgs_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/python3.8/site-packages/bbd_msgs/bbd_msgs_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so" to ""
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__python.so
+-- Set runtime path of "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/lib/libbbd_msgs__python.so" to ""
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/msg/BBDBackboneOutput.idl
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/msg/BBDBranchOutput.idl
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/msg/TickTrigger.idl
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/msg/BBDBackboneOutput.msg
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/msg/BBDBranchOutput.msg
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/msg/TickTrigger.msg
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/ament_index/resource_index/package_run_dependencies/bbd_msgs
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/ament_index/resource_index/parent_prefix_path/bbd_msgs
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/environment/ament_prefix_path.sh
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/environment/ament_prefix_path.dsv
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/environment/path.sh
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/environment/path.dsv
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/local_setup.bash
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/local_setup.sh
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/local_setup.zsh
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/local_setup.dsv
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/package.dsv
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/ament_index/resource_index/packages/bbd_msgs
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_generator_cExport.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_generator_cExport-release.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_typesupport_introspection_cExport.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_typesupport_introspection_cExport-release.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_typesupport_cExport.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_typesupport_cExport-release.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_generator_cppExport.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_typesupport_introspection_cppExport.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_typesupport_introspection_cppExport-release.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_typesupport_cppExport.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgs__rosidl_typesupport_cppExport-release.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/rosidl_cmake-extras.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/ament_cmake_export_libraries-extras.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/ament_cmake_export_targets-extras.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgsConfig.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/cmake/bbd_msgsConfig-version.cmake
+-- Installing: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs/share/bbd_msgs/package.xml

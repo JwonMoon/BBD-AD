@@ -7,7 +7,7 @@ folders=("tcp_50pts" "tcp_merge_50pts" "uniad_50pts" "uniad_tiny_50pts" "vad_50p
 for folder in "${folders[@]}"; do
     echo "Processing folder: $folder"
     
-    python scripts/draw_gpu_cpu_smooth.py "/root/shared_dir/B2D_Demo/jw_ws/log/$folder" "/root/shared_dir/B2D_Demo/jw_ws/output/memory/${folder}_memory.png"
+    python scripts/draw_gpu_cpu_smooth.py "/root/shared_dir/B2D_Demo/my_ws/log/$folder" "/root/shared_dir/B2D_Demo/my_ws/output/memory/${folder}_memory.png"
 
     echo "Completed for $folder"
     echo "-------------------"

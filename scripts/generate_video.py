@@ -39,8 +39,8 @@ def create_video(images_folder, output_video, fps, font_scale, text_color, text_
         video.write(img)
     video.release()
 
-images_folder = '/root/shared_dir/B2D_Demo/jw_ws/eval_v1/' + file_name
-output_video = '/root/shared_dir/B2D_Demo/jw_ws/output/video/' + file_name + '.mp4'
+images_folder = '/root/shared_dir/B2D_Demo/my_ws/eval_v1/' + file_name
+output_video = '/root/shared_dir/B2D_Demo/my_ws/output/video/' + file_name + '.mp4'
 # fps = 15
 fps = 10 #jw - 10Hz presumption
 font_scale = 1

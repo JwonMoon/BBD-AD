@@ -1,0 +1,8 @@
+{
+  "package_name": "bbd_msgs",
+  "non_idl_tuples": [
+    "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs:msg/BBDBackboneOutput.msg",
+    "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs:msg/BBDBranchOutput.msg",
+    "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs:msg/TickTrigger.msg"
+  ]
+}
