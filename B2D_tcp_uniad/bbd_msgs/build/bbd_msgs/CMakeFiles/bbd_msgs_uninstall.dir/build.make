@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs
+CMAKE_SOURCE_DIR = /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs
+CMAKE_BINARY_DIR = /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs
 
 # Utility rule file for bbd_msgs_uninstall.
 
@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs
 include CMakeFiles/bbd_msgs_uninstall.dir/progress.make
 
 CMakeFiles/bbd_msgs_uninstall:
-	/usr/bin/cmake -P /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/ament_cmake_uninstall_target/ament_cmake_uninstall_target.cmake
+	/usr/bin/cmake -P /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/ament_cmake_uninstall_target/ament_cmake_uninstall_target.cmake
 
 bbd_msgs_uninstall: CMakeFiles/bbd_msgs_uninstall
 bbd_msgs_uninstall: CMakeFiles/bbd_msgs_uninstall.dir/build.make
@@ -71,6 +71,6 @@ CMakeFiles/bbd_msgs_uninstall.dir/clean:
 .PHONY : CMakeFiles/bbd_msgs_uninstall.dir/clean
 
 CMakeFiles/bbd_msgs_uninstall.dir/depend:
-	cd /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/CMakeFiles/bbd_msgs_uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/CMakeFiles/bbd_msgs_uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/bbd_msgs_uninstall.dir/depend
 

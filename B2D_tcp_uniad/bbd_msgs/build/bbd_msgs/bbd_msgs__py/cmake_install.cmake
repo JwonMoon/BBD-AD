@@ -1,8 +1,8 @@
-# Install script for directory: /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/bbd_msgs__py
+# Install script for directory: /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/bbd_msgs__py
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/install/bbd_msgs")
+  set(CMAKE_INSTALL_PREFIX "/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/install/bbd_msgs")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

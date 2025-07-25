@@ -3,6 +3,7 @@
 *.png
 *.csv
 */Bench2Drive/eval_v1
+*/Bench2Drive/eval.json
 */Bench2DriveZoo/ckpts
 */Bench2DriveZoo/.git
 */Bench2DriveZoo/.gitignore

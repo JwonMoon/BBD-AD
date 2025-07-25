@@ -31,7 +31,8 @@ export HOST=${11} #jw
 # export DEBUG_CHALLENGE=0
 export DEBUG_MODE=${12} #jw
 
-
+# echo ""
+# echo "▶ Calling run_evaluation.sh with 12 args:"
 # echo "PORT=$PORT"
 # echo "TM_PORT=$TM_PORT"
 # echo "IS_BENCH2DRIVE=$IS_BENCH2DRIVE"
@@ -43,13 +44,7 @@ export DEBUG_MODE=${12} #jw
 # echo "PLANNER_TYPE=$PLANNER_TYPE"
 # echo "GPU_RANK=$GPU_RANK"
 # echo "HOST=$HOST"
-# echo "DEBUG_CHALLENGE=$DEBUG_CHALLENGE"
-
-# echo ""
-# echo "▶ Calling run_evaluation.sh with 12 args:"
-# echo "$PORT" "$TM_PORT" "$IS_BENCH2DRIVE" "$ROUTES" "$TEAM_AGENT" "$TEAM_CONFIG" \
-#      "$CHECKPOINT_ENDPOINT" "$SAVE_PATH" "$PLANNER_TYPE" "$GPU_RANK" "$HOST" "$DEBUG_CHALLENGE"
-
+# echo "DEBUG_MODE=$DEBUG_MODE"
 
 CUDA_VISIBLE_DEVICES=${GPU_RANK} python ${LEADERBOARD_ROOT}/leaderboard/leaderboard_evaluator_uniad.py \
 --routes=${ROUTES} \

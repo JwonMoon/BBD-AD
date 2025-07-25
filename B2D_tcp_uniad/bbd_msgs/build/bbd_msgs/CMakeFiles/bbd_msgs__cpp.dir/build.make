@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs
+CMAKE_SOURCE_DIR = /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs
+CMAKE_BINARY_DIR = /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs
 
 # Utility rule file for bbd_msgs__cpp.
 
@@ -125,8 +125,8 @@ rosidl_generator_cpp/bbd_msgs/msg/bbd_backbone_output.hpp: /opt/ros/foxy/share/s
 rosidl_generator_cpp/bbd_msgs/msg/bbd_backbone_output.hpp: /opt/ros/foxy/share/std_msgs/msg/UInt64MultiArray.idl
 rosidl_generator_cpp/bbd_msgs/msg/bbd_backbone_output.hpp: /opt/ros/foxy/share/std_msgs/msg/UInt8.idl
 rosidl_generator_cpp/bbd_msgs/msg/bbd_backbone_output.hpp: /opt/ros/foxy/share/std_msgs/msg/UInt8MultiArray.idl
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating C++ code for ROS interfaces"
-	/usr/bin/python3 /opt/ros/foxy/share/rosidl_generator_cpp/cmake/../../../lib/rosidl_generator_cpp/rosidl_generator_cpp --generator-arguments-file /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_generator_cpp__arguments.json
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating C++ code for ROS interfaces"
+	/usr/bin/python3 /opt/ros/foxy/share/rosidl_generator_cpp/cmake/../../../lib/rosidl_generator_cpp/rosidl_generator_cpp --generator-arguments-file /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_generator_cpp__arguments.json
 
 rosidl_generator_cpp/bbd_msgs/msg/detail/bbd_backbone_output__builder.hpp: rosidl_generator_cpp/bbd_msgs/msg/bbd_backbone_output.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/bbd_msgs/msg/detail/bbd_backbone_output__builder.hpp
@@ -200,6 +200,6 @@ CMakeFiles/bbd_msgs__cpp.dir/clean:
 .PHONY : CMakeFiles/bbd_msgs__cpp.dir/clean
 
 CMakeFiles/bbd_msgs__cpp.dir/depend:
-	cd /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/CMakeFiles/bbd_msgs__cpp.dir/DependInfo.cmake --color=$(COLOR)
+	cd /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/CMakeFiles/bbd_msgs__cpp.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/bbd_msgs__cpp.dir/depend
 

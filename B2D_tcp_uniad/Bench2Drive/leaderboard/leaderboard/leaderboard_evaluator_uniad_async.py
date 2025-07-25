@@ -28,8 +28,6 @@ import subprocess
 import time
 from datetime import datetime
 # jw
-from xml.etree import ElementTree as ET
-
 from srunner.scenariomanager.carla_data_provider import *
 from srunner.scenariomanager.timer import GameTime
 from srunner.scenariomanager.watchdog import Watchdog
@@ -40,7 +38,6 @@ from leaderboard.envs.sensor_interface import SensorConfigurationInvalid
 from leaderboard.autoagents.agent_wrapper_w_bridge import AgentError, validate_sensor_configuration, TickRuntimeError
 from leaderboard.utils.statistics_manager import StatisticsManager, FAILURE_MESSAGES
 from leaderboard.utils.route_indexer import RouteIndexer
-# from leaderboard.utils.route_manipulation import downsample_route # 다운샘플링용
 from leaderboard.autoagents.ros_base_agent_w_bridge import BridgeHelper, ROSBaseAgent
 from leaderboard.autoagents.autonomous_agent_w_bridge import AutonomousAgent
 
@@ -52,7 +49,7 @@ from carla_msgs.msg import CarlaRoute, CarlaGnssRoute
 from diagnostic_msgs.msg import KeyValue
 from geometry_msgs.msg import Point, Pose, Quaternion
 from sensor_msgs.msg import NavSatFix
-from tcp_msgs.msg import TCPBranchOutput
+from bbd_msgs.msg import BBDBranchOutput
 import pathlib, csv
 
 import atexit
@@ -104,10 +101,9 @@ class EvaluatorAgent(Node, ROSBaseAgent):
     def __init__(self, args):
         # rclpy 초기화
         rclpy.init(args=None)
-        # ROSBaseAgent.__init__(self, self.ROS_VERSION, carla_host, carla_port, debug)
-        # ROSBaseAgent의 브릿지만 초기화
-        # AutonomousAgent.__init__(self, carla_host, carla_port, debug)  # ROSBaseAgent.__init__ 건너뜀
-        AutonomousAgent.__init__(self, args.host, args.port, args.debug > 0)  # ROSBaseAgent.__init__ 건너뜀
+        # ROSBaseAgent.__init__(self, self.ROS_VERSION, carla_host, carla_port, debug)  # ROSBaseAgent 초기화 pass
+        # AutonomousAgent.__init__(self, carla_host, carla_port, debug)  # ROSBaseAgent의 부모클래스 AutonomousAgent 초기화
+        AutonomousAgent.__init__(self, args.host, args.port, args.debug > 0)  # ROSBaseAgent의 부모클래스 AutonomousAgent 초기화
         Node.__init__(self, 'evaluator_node')
         
         # BEST_EFFORT QoS 프로파일 생성
@@ -117,8 +113,8 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             depth=1
         )
         
-        self._control_subscriber = self.create_subscription(TCPBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, QoSProfile(depth=1))
-        # self._control_subscriber = self.create_subscription(TCPBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, best_effort_qos)
+        self._control_subscriber = self.create_subscription(BBDBranchOutput, '/uniad/vehicle_control_cmd', self._vehicle_control_cmd_callback, QoSProfile(depth=1))
+        # self._control_subscriber = self.create_subscription(BBDBranchOutput, '/uniad/vehicle_control_cmd', self._vehicle_control_cmd_callback, best_effort_qos)
 
         self._path_publisher = self.create_publisher(CarlaRoute, "/carla/hero/global_plan", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self._path_gps_publisher = self.create_publisher(CarlaGnssRoute, "/carla/hero/global_plan_gps", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
@@ -131,7 +127,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
         # if debug and SAVE_PATH:
         if args.debug > 0 and SAVE_PATH:
             now = datetime.now()
-            string = f"tcp_agent_{now.strftime('%m_%d_%H_%M_%S')}"
+            string = f"uniad_agent_{now.strftime('%m_%d_%H_%M_%S')}"
             self.save_path = pathlib.Path(SAVE_PATH) / string
             self.save_path.mkdir(parents=True, exist_ok=True)
 
@@ -141,7 +137,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
                 writer.writerow([
                     'T_car_tick_start', 'T_car_tick_end', 
                 ])
-            self.log_file_br = self.save_path / 'evaluator_tcp_cb_timing.csv'
+            self.log_file_br = self.save_path / 'evaluator_uniad_cb_timing.csv'
             with open(self.log_file_br, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
@@ -167,12 +163,12 @@ class EvaluatorAgent(Node, ROSBaseAgent):
                         T_car_tick_start, T_car_tick_end
                     ])
 
-    def sensors(self): #original
+    def sensors(self):
 	    return [
 				{
-					'type': 'sensor.camera.rgb',
-					'x': 0.80, 'y': 0.0, 'z': 1.60,
-					'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
+                    'type': 'sensor.camera.rgb',
+                    'x': 0.80, 'y': 0.0, 'z': 1.60,
+                    'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
 					# 'width': 1600, 'height': 900, 'fov': 70,
 					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
 					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
@@ -182,12 +178,12 @@ class EvaluatorAgent(Node, ROSBaseAgent):
 					# 'width': 800, 'height': 450, 'fov': 70, #0.5
 					# 'width': 480, 'height': 270, 'fov': 70, #0.3
 					# 'width': 160, 'height': 90, 'fov': 70, #0.1
-					'id': 'CAM_FRONT'
-					},
-				{
-					'type': 'sensor.camera.rgb',
-					'x': 0.27, 'y': -0.55, 'z': 1.60,
-					'roll': 0.0, 'pitch': 0.0, 'yaw': -55.0,
+                    'id': 'CAM_FRONT'
+                },
+                {
+                    'type': 'sensor.camera.rgb',
+                    'x': 0.27, 'y': -0.55, 'z': 1.60,
+                    'roll': 0.0, 'pitch': 0.0, 'yaw': -55.0,
 					# 'width': 1600, 'height': 900, 'fov': 70,
 					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
 					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
@@ -197,12 +193,12 @@ class EvaluatorAgent(Node, ROSBaseAgent):
 					# 'width': 800, 'height': 450, 'fov': 70, #0.5
 					# 'width': 480, 'height': 270, 'fov': 70, #0.3
 					# 'width': 160, 'height': 90, 'fov': 70, #0.1
-					'id': 'CAM_FRONT_LEFT'
-					},
-				{
-					'type': 'sensor.camera.rgb',
-					'x': 0.27, 'y': 0.55, 'z': 1.60,
-					'roll': 0.0, 'pitch': 0.0, 'yaw': 55.0,
+                    'id': 'CAM_FRONT_LEFT'
+                },
+                {
+                    'type': 'sensor.camera.rgb',
+                    'x': 0.27, 'y': 0.55, 'z': 1.60,
+                    'roll': 0.0, 'pitch': 0.0, 'yaw': 55.0,
 					# 'width': 1600, 'height': 900, 'fov': 70,
 					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
 					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
@@ -212,37 +208,77 @@ class EvaluatorAgent(Node, ROSBaseAgent):
 					# 'width': 800, 'height': 450, 'fov': 70, #0.5
 					# 'width': 480, 'height': 270, 'fov': 70, #0.3
 					# 'width': 160, 'height': 90, 'fov': 70, #0.1
-					'id': 'CAM_FRONT_RIGHT'
-					},
-				# imu
-				{
-					'type': 'sensor.other.imu',
-					'x': -1.4, 'y': 0.0, 'z': 0.0,
-					'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-					'sensor_tick': 0.05,
-					'id': 'IMU'
-					},
-				# gps
-				{
-					'type': 'sensor.other.gnss',
-					'x': -1.4, 'y': 0.0, 'z': 0.0,
-					'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-					'sensor_tick': 0.01,
-					'id': 'GPS'
-					}]
-				# # speed
-				# {
-				# 	'type': 'sensor.speedometer',
-				# 	'reading_frequency': 20,
-				# 	'id': 'SPEED'
-				# 	},
-                # {	
-                #     'type': 'sensor.camera.rgb',
-                #     'x': 0.0, 'y': 0.0, 'z': 50.0,
-                #     'roll': 0.0, 'pitch': -90.0, 'yaw': 0.0,
-                #     'width': 512, 'height': 512, 'fov': 5 * 10.0,
-                #     'id': 'bev'
-                # }]
+                    'id': 'CAM_FRONT_RIGHT'
+                },
+                {
+                    'type': 'sensor.camera.rgb',
+                    'x': -2.0, 'y': 0.0, 'z': 1.60,
+                    'roll': 0.0, 'pitch': 0.0, 'yaw': 180.0,
+					# 'width': 1600, 'height': 900, 'fov': 110,
+					# 'width': 1440, 'height': 810, 'fov': 110, #0.9
+					# 'width': 1280, 'height': 720, 'fov': 110, #0.8
+					# 'width': 1120, 'height': 630, 'fov': 110, #0.7
+					'width': 1040, 'height': 585, 'fov': 110, #0.65
+					# 'width': 960, 'height': 540, 'fov': 110, #0.6
+					# 'width': 800, 'height': 450, 'fov': 110, #0.5
+					# 'width': 480, 'height': 270, 'fov': 110, #0.3
+					# 'width': 160, 'height': 90, 'fov': 110, #0.1
+                    'id': 'CAM_BACK'
+                },
+                {
+                    'type': 'sensor.camera.rgb',
+                    'x': -0.32, 'y': -0.55, 'z': 1.60,
+                    'roll': 0.0, 'pitch': 0.0, 'yaw': -110.0,
+					# 'width': 1600, 'height': 900, 'fov': 70,
+					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
+					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
+					# 'width': 1120, 'height': 630, 'fov': 70, #0.7
+					'width': 1040, 'height': 585, 'fov': 70, #0.65
+					# 'width': 960, 'height': 540, 'fov': 70, #0.6
+					# 'width': 800, 'height': 450, 'fov': 70, #0.5
+					# 'width': 480, 'height': 270, 'fov': 70, #0.3
+					# 'width': 160, 'height': 90, 'fov': 70, #0.1
+                    'id': 'CAM_BACK_LEFT'
+                },
+                {
+                    'type': 'sensor.camera.rgb',
+                    'x': -0.32, 'y': 0.55, 'z': 1.60,
+                    'roll': 0.0, 'pitch': 0.0, 'yaw': 110.0,
+					# 'width': 1600, 'height': 900, 'fov': 70,
+					# 'width': 1440, 'height': 810, 'fov': 70, #0.9
+					# 'width': 1280, 'height': 720, 'fov': 70, #0.8
+					# 'width': 1120, 'height': 630, 'fov': 70, #0.7
+					'width': 1040, 'height': 585, 'fov': 70, #0.65
+					# 'width': 960, 'height': 540, 'fov': 70, #0.6
+					# 'width': 800, 'height': 450, 'fov': 70, #0.5
+					# 'width': 480, 'height': 270, 'fov': 70, #0.3
+					# 'width': 160, 'height': 90, 'fov': 70, #0.1
+                    'id': 'CAM_BACK_RIGHT'
+                },
+                # imu
+                {
+                    'type': 'sensor.other.imu',
+                    'x': -1.4, 'y': 0.0, 'z': 0.0,
+                    'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
+                    'sensor_tick': 0.05,
+                    'id': 'IMU'
+                },
+                # gps
+                {
+                    'type': 'sensor.other.gnss',
+                    'x': -1.4, 'y': 0.0, 'z': 0.0,
+                    'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
+                    'sensor_tick': 0.01,
+                    'id': 'GPS'
+                },
+                # speed
+                # {
+                #     'type': 'sensor.speedometer',
+                #     'reading_frequency': 20,
+                #     'id': 'SPEED'
+                # },
+                ]
+    
     
     #ros2_agent function
     @staticmethod
@@ -354,7 +390,6 @@ class LeaderboardEvaluator(object):
         self.sensor_icons = []
         self.agent_instance = None
         self.route_scenario = None
-        # self.frame_rate = 20.0      # in Hz #jw
         self.frame_rate = args.tick_hz      # in Hz #jw
         print(">> args.tick_hz:", args.tick_hz)
 

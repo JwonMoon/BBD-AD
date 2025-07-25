@@ -128,7 +128,7 @@ class EvaluatorAgent(Node, ROSBaseAgent):
                     'T_tick_end'
                 ])
 
-    def sensors(self): #original
+    def sensors(self):
 	    return [
 				{
                     'type': 'sensor.camera.rgb',

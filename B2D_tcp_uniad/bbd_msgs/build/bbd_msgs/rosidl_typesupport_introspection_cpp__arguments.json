@@ -1,11 +1,11 @@
 {
   "package_name": "bbd_msgs",
-  "output_dir": "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_cpp/bbd_msgs",
+  "output_dir": "/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_cpp/bbd_msgs",
   "template_dir": "/opt/ros/foxy/share/rosidl_typesupport_introspection_cpp/resource",
   "idl_tuples": [
-    "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/BBDBackboneOutput.idl",
-    "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/BBDBranchOutput.idl",
-    "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/TickTrigger.idl"
+    "/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/BBDBackboneOutput.idl",
+    "/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/BBDBranchOutput.idl",
+    "/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/TickTrigger.idl"
   ],
   "ros_interface_dependencies": [
     "builtin_interfaces:/opt/ros/foxy/share/builtin_interfaces/msg/Duration.idl",
@@ -50,9 +50,9 @@
     "/opt/ros/foxy/share/rosidl_typesupport_introspection_cpp/resource/msg__type_support.cpp.em",
     "/opt/ros/foxy/share/rosidl_typesupport_introspection_cpp/resource/srv__rosidl_typesupport_introspection_cpp.hpp.em",
     "/opt/ros/foxy/share/rosidl_typesupport_introspection_cpp/resource/srv__type_support.cpp.em",
-    "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs/msg/BBDBackboneOutput.idl",
-    "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs/msg/BBDBranchOutput.idl",
-    "/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs/msg/TickTrigger.idl",
+    "/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs/msg/BBDBackboneOutput.idl",
+    "/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs/msg/BBDBranchOutput.idl",
+    "/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs/msg/TickTrigger.idl",
     "/opt/ros/foxy/share/builtin_interfaces/msg/Duration.idl",
     "/opt/ros/foxy/share/builtin_interfaces/msg/Time.idl",
     "/opt/ros/foxy/share/std_msgs/msg/Bool.idl",

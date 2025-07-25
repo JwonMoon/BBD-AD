@@ -32,21 +32,21 @@ export HOST=${11} #jw
 export DEBUG_MODE=${12} #jw
 export TICK_HZ=${13} #jw
 
-echo ""
-echo "▶ Calling run_evaluation.sh with 12 args:"
-echo "PORT=$PORT"
-echo "TM_PORT=$TM_PORT"
-echo "IS_BENCH2DRIVE=$IS_BENCH2DRIVE"
-echo "ROUTES=$ROUTES"
-echo "TEAM_AGENT=$TEAM_AGENT"
-echo "TEAM_CONFIG=$TEAM_CONFIG"
-echo "CHECKPOINT_ENDPOINT=$CHECKPOINT_ENDPOINT"
-echo "SAVE_PATH=$SAVE_PATH"
-echo "PLANNER_TYPE=$PLANNER_TYPE"
-echo "GPU_RANK=$GPU_RANK"
-echo "HOST=$HOST"
-echo "DEBUG_MODE=$DEBUG_MODE"
-echo "TICK_HZ=$TICK_HZ"
+# echo ""
+# echo "▶ Calling run_evaluation.sh with 13 args:"
+# echo "PORT=$PORT"
+# echo "TM_PORT=$TM_PORT"
+# echo "IS_BENCH2DRIVE=$IS_BENCH2DRIVE"
+# echo "ROUTES=$ROUTES"
+# echo "TEAM_AGENT=$TEAM_AGENT"
+# echo "TEAM_CONFIG=$TEAM_CONFIG"
+# echo "CHECKPOINT_ENDPOINT=$CHECKPOINT_ENDPOINT"
+# echo "SAVE_PATH=$SAVE_PATH"
+# echo "PLANNER_TYPE=$PLANNER_TYPE"
+# echo "GPU_RANK=$GPU_RANK"
+# echo "HOST=$HOST"
+# echo "DEBUG_MODE=$DEBUG_MODE"
+# echo "TICK_HZ=$TICK_HZ"
 
 CUDA_VISIBLE_DEVICES=${GPU_RANK} python ${LEADERBOARD_ROOT}/leaderboard/leaderboard_evaluator_async.py \
 --routes=${ROUTES} \

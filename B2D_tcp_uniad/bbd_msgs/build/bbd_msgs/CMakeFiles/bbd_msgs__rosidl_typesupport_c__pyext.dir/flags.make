@@ -6,5 +6,5 @@ C_FLAGS = -O3 -DNDEBUG -fPIC   -Wall -Wextra
 
 C_DEFINES = -DRCUTILS_ENABLE_FAULT_INJECTION -DROS_PACKAGE_NAME=\"bbd_msgs\" -Dbbd_msgs__rosidl_typesupport_c__pyext_EXPORTS
 
-C_INCLUDES = -I/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_generator_c -I/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_generator_py -I/usr/include/python3.8 -I/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_c -isystem /opt/ros/foxy/include 
+C_INCLUDES = -I/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_generator_c -I/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_generator_py -I/usr/include/python3.8 -I/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_c -isystem /opt/ros/foxy/include 
 

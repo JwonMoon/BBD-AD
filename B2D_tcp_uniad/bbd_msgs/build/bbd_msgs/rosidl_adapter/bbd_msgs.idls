@@ -1,3 +1,3 @@
-/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/BBDBackboneOutput.idl
-/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/BBDBranchOutput.idl
-/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/TickTrigger.idl
+/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/BBDBackboneOutput.idl
+/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/BBDBranchOutput.idl
+/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_adapter/bbd_msgs:msg/TickTrigger.idl

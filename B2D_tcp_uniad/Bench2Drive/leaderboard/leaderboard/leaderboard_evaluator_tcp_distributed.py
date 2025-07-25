@@ -47,12 +47,12 @@ from leaderboard.autoagents.autonomous_agent_w_bridge import AutonomousAgent
 # jw
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, DurabilityPolicy, QoSReliabilityPolicy
+from rclpy.qos import QoSProfile, DurabilityPolicy
 from carla_msgs.msg import CarlaRoute, CarlaGnssRoute
 from diagnostic_msgs.msg import KeyValue
 from geometry_msgs.msg import Point, Pose, Quaternion
 from sensor_msgs.msg import NavSatFix
-from tcp_msgs.msg import TickTrigger, TCPBranchOutput
+from bbd_msgs.msg import TickTrigger, BBDBranchOutput
 import pathlib, csv
 
 import atexit
@@ -100,27 +100,16 @@ def get_weather_id(weather_conditions):
 class EvaluatorAgent(Node, ROSBaseAgent):
     ROS_VERSION = 2
 
-    # def __init__(self, carla_host, carla_port, tick_hz, debug=False):
-    def __init__(self, args):
+    def __init__(self, carla_host, carla_port, debug=False):
         # rclpy 초기화
         rclpy.init(args=None)
         # ROSBaseAgent.__init__(self, self.ROS_VERSION, carla_host, carla_port, debug)
         # ROSBaseAgent의 브릿지만 초기화
-        # AutonomousAgent.__init__(self, carla_host, carla_port, debug)  # ROSBaseAgent.__init__ 건너뜀
-        AutonomousAgent.__init__(self, args.host, args.port, args.debug > 0)  # ROSBaseAgent.__init__ 건너뜀
+        AutonomousAgent.__init__(self, carla_host, carla_port, debug)  # ROSBaseAgent.__init__ 건너뜀
         Node.__init__(self, 'evaluator_node')
-        
-        # BEST_EFFORT QoS 프로파일 생성
-        best_effort_qos = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            durability=DurabilityPolicy.VOLATILE,
-            depth=1
-        )
 
-        self._control_subscriber = self.create_subscription(TCPBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, QoSProfile(depth=1))
-        # self._control_subscriber = self.create_subscription(TCPBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, best_effort_qos)
-        # self._control_subscriber = self.create_subscription(TickTrigger, '/tcp/tick_trigger', self._tick_trigger_callback, QoSProfile(depth=1))
-        self._control_subscriber = self.create_subscription(TickTrigger, '/tcp/tick_trigger', self._tick_trigger_callback, best_effort_qos)
+        self._control_subscriber = self.create_subscription(BBDBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, QoSProfile(depth=1))
+        self._control_subscriber = self.create_subscription(TickTrigger, '/tcp/tick_trigger', self._tick_trigger_callback, QoSProfile(depth=1))
         
         self._path_publisher = self.create_publisher(CarlaRoute, "/carla/hero/global_plan", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self._path_gps_publisher = self.create_publisher(CarlaGnssRoute, "/carla/hero/global_plan_gps", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
@@ -128,20 +117,19 @@ class EvaluatorAgent(Node, ROSBaseAgent):
         self._scenario_manager = None
         self._control = None
         self._is_agent_ready = False
-        self.timeout = args.timeout
 
-        if args.debug > 0 and SAVE_PATH:
+        if debug and SAVE_PATH:
             now = datetime.now()
             string = f"tcp_agent_{now.strftime('%m_%d_%H_%M_%S')}"
             self.save_path = pathlib.Path(SAVE_PATH) / string
             self.save_path.mkdir(parents=True, exist_ok=True)
             
             # timing
-            self.log_file_timer = self.save_path / 'evaluator_timer_cb_timing.csv'
-            with open(self.log_file_timer, 'w', newline='') as f:
+            self.log_file_bb = self.save_path / 'evaluator_backbone_cb_timing.csv'
+            with open(self.log_file_bb, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
-                    'T_car_tick_start', 'T_car_tick_end'
+                    'step', 'T_bb_cb_start', 'T_car_tick_start', 'T_car_tick_end', 'T_bb_cb_end' # jw changed
                 ])
             self.log_file_br = self.save_path / 'evaluator_branch_cb_timing.csv'
             with open(self.log_file_br, 'w', newline='') as f:
@@ -149,25 +137,6 @@ class EvaluatorAgent(Node, ROSBaseAgent):
                 writer.writerow([
                     'step', 'T_br_cb_start', 'T_car_ctrl_start', 'T_car_ctrl_end', 'T_br_cb_end'
                 ])
-            
-        tick_sec = 1 / args.tick_hz # ms to s
-        # print ("##################### tick_sec:", tick_sec)
-        self._tick_timer = self.create_timer(tick_sec, self._tick_simulation_cb)
-
-    def _tick_simulation_cb(self):
-        if self._is_agent_ready:
-            # print("_tick_simulation_cb")
-            T_car_tick_start = time.time()
-            CarlaDataProvider.get_world().tick(self.timeout)
-            T_car_tick_end = time.time()
-
-            # timing log 저장
-            if self.log_file_timer:
-                with open(self.log_file_timer, 'a', newline='') as f:
-                    writer = csv.writer(f)
-                    writer.writerow([
-                        T_car_tick_start, T_car_tick_end
-                    ])
 
     def sensors(self): #original
 	    return [
@@ -305,28 +274,27 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             return carla.VehicleControl()  # 기본적으로 멈춘 상태
 
     def _tick_trigger_callback(self, msg):
-        # T_bb_cb_start = time.time()
+        T_bb_cb_start = time.time()
         if self._is_agent_ready is False:
             print(f"[EvaluatorAgent] set _is_agent_ready True, step={msg.step}")
             self._is_agent_ready = True
-            
-        # if msg.trigger and self._scenario_manager is not None:
-        #     print(f"[EvaluatorAgent] Received tick trigger, step={msg.step}")
-        #     try:
-        #         # T_bb_cb_start, T_car_tick_start, T_car_tick_end, T_bb_cb_end = self._scenario_manager._tick_simulation(msg.step)
-        #         T_car_tick_start, T_car_tick_end = self._scenario_manager._tick_simulation()
-        #     except Exception as e:
-        #         print(f"tick_callback error: {e}")
-        # T_bb_cb_end = time.time()
+        if msg.trigger and self._scenario_manager is not None:
+            print(f"[EvaluatorAgent] Received tick trigger, step={msg.step}")
+            try:
+                # T_bb_cb_start, T_car_tick_start, T_car_tick_end, T_bb_cb_end = self._scenario_manager._tick_simulation(msg.step)
+                T_car_tick_start, T_car_tick_end = self._scenario_manager._tick_simulation()
+            except Exception as e:
+                print(f"tick_callback error: {e}")
+        T_bb_cb_end = time.time()
         
-        # # timing log 저장
-        # if self.log_file_bb:
-        #     with open(self.log_file_bb, 'a', newline='') as f:
-        #         writer = csv.writer(f)
-        #         writer.writerow([
-        #             msg.step,
-        #             T_bb_cb_start, T_car_tick_start, T_car_tick_end, T_bb_cb_end
-        #         ])
+        # timing log 저장
+        if self.log_file_bb:
+            with open(self.log_file_bb, 'a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    msg.step,
+                    T_bb_cb_start, T_car_tick_start, T_car_tick_end, T_bb_cb_end
+                ])
 
     def _vehicle_control_cmd_callback(self, msg):
         T_br_cb_start = time.time()
@@ -635,8 +603,7 @@ class LeaderboardEvaluator(object):
             # args.agent_config = args.agent_config + '+' + save_name
             # self.agent_instance.setup(args.agent_config)
             #jw)
-            # self.agent_instance = EvaluatorAgent(args.host, args.port, args.tick_hz, args.debug > 0)
-            self.agent_instance = EvaluatorAgent(args)
+            self.agent_instance = EvaluatorAgent(args.host, args.port, args.debug > 0)
             
             # print("RouteScenario.gps_route:", self.route_scenario.gps_route)
             # print("RouteScenario.route:", self.route_scenario.route)
@@ -841,7 +808,6 @@ def main():
                         help="Path to checkpoint used for saving live results")
     parser.add_argument("--gpu-rank", type=int, default=0)
     parser.add_argument('--save-path', default=None, help='Path to save debug outputs')
-    parser.add_argument('--tick-hz', type=int, default=20, help='Path to save debug outputs')
     
     arguments = parser.parse_args()
 

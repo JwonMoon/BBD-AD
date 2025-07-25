@@ -6,5 +6,5 @@ CXX_FLAGS = -O3 -DNDEBUG -fPIC   -Wall -std=gnu++14
 
 CXX_DEFINES = -DRCUTILS_ENABLE_FAULT_INJECTION -DROS_PACKAGE_NAME=\"bbd_msgs\" -Dbbd_msgs__rosidl_typesupport_cpp_EXPORTS
 
-CXX_INCLUDES = -I/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_generator_cpp -isystem /opt/ros/foxy/include 
+CXX_INCLUDES = -I/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_generator_cpp -isystem /opt/ros/foxy/include 
 

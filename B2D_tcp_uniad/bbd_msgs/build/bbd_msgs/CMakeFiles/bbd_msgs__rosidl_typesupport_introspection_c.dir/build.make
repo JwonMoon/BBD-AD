@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs
+CMAKE_SOURCE_DIR = /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs
+CMAKE_BINARY_DIR = /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs
 
 # Include any dependencies generated for this target.
 include CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/depend.make
@@ -100,8 +100,8 @@ rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__rosi
 rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__rosidl_typesupport_introspection_c.h: /opt/ros/foxy/share/std_msgs/msg/UInt64MultiArray.idl
 rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__rosidl_typesupport_introspection_c.h: /opt/ros/foxy/share/std_msgs/msg/UInt8.idl
 rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__rosidl_typesupport_introspection_c.h: /opt/ros/foxy/share/std_msgs/msg/UInt8MultiArray.idl
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating C introspection for ROS interfaces"
-	/usr/bin/python3 /opt/ros/foxy/lib/rosidl_typesupport_introspection_c/rosidl_typesupport_introspection_c --generator-arguments-file /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c__arguments.json
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating C introspection for ROS interfaces"
+	/usr/bin/python3 /opt/ros/foxy/lib/rosidl_typesupport_introspection_c/rosidl_typesupport_introspection_c --generator-arguments-file /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c__arguments.json
 
 rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__rosidl_typesupport_introspection_c.h: rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__rosidl_typesupport_introspection_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__rosidl_typesupport_introspection_c.h
@@ -120,42 +120,42 @@ rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_suppor
 
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.o: CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/flags.make
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.o: rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.o   -c /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.o   -c /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c
 
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c > CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c > CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.i
 
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c.s
 
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.o: CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/flags.make
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.o: rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.o   -c /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.o   -c /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c
 
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c > CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c > CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.i
 
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c.s
 
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.o: CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/flags.make
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.o: rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.o   -c /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.o   -c /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c
 
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c > CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c > CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.i
 
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c -o CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c.s
 
 # Object files for target bbd_msgs__rosidl_typesupport_introspection_c
 bbd_msgs__rosidl_typesupport_introspection_c_OBJECTS = \
@@ -189,7 +189,7 @@ libbbd_msgs__rosidl_typesupport_introspection_c.so: /opt/ros/foxy/lib/librcpputi
 libbbd_msgs__rosidl_typesupport_introspection_c.so: /opt/ros/foxy/lib/librosidl_runtime_c.so
 libbbd_msgs__rosidl_typesupport_introspection_c.so: /opt/ros/foxy/lib/librcutils.so
 libbbd_msgs__rosidl_typesupport_introspection_c.so: CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking C shared library libbbd_msgs__rosidl_typesupport_introspection_c.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking C shared library libbbd_msgs__rosidl_typesupport_introspection_c.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -207,6 +207,6 @@ CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_types
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_backbone_output__type_support.c
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/bbd_branch_output__type_support.c
 CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/bbd_msgs/msg/detail/tick_trigger__type_support.c
-	cd /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp/bbd_msgs/build/bbd_msgs/CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/DependInfo.cmake --color=$(COLOR)
+	cd /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs /root/shared_dir/B2D_Demo/B2D_tcp_uniad/bbd_msgs/build/bbd_msgs/CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/bbd_msgs__rosidl_typesupport_introspection_c.dir/depend
 

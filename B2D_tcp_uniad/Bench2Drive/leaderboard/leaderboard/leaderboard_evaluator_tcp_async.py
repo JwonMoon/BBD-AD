@@ -52,7 +52,7 @@ from carla_msgs.msg import CarlaRoute, CarlaGnssRoute
 from diagnostic_msgs.msg import KeyValue
 from geometry_msgs.msg import Point, Pose, Quaternion
 from sensor_msgs.msg import NavSatFix
-from tcp_msgs.msg import TCPBranchOutput
+from bbd_msgs.msg import BBDBranchOutput
 import pathlib, csv
 
 import atexit
@@ -117,8 +117,8 @@ class EvaluatorAgent(Node, ROSBaseAgent):
             depth=1
         )
         
-        self._control_subscriber = self.create_subscription(TCPBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, QoSProfile(depth=1))
-        # self._control_subscriber = self.create_subscription(TCPBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, best_effort_qos)
+        self._control_subscriber = self.create_subscription(BBDBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, QoSProfile(depth=1))
+        # self._control_subscriber = self.create_subscription(BBDBranchOutput, '/tcp/vehicle_control_cmd', self._vehicle_control_cmd_callback, best_effort_qos)
 
         self._path_publisher = self.create_publisher(CarlaRoute, "/carla/hero/global_plan", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self._path_gps_publisher = self.create_publisher(CarlaGnssRoute, "/carla/hero/global_plan_gps", qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))

@@ -34,7 +34,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 # from carla_msgs.msg import CarlaEgoVehicleControl
-# from tcp_msgs.msg import TickTrigger
+# from bbd_msgs.msg import TickTrigger
 
 #jw) to ROS node
 # class ScenarioManager(Node):
