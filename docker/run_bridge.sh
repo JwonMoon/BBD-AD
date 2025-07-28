@@ -18,8 +18,8 @@ echo "Launching $IMAGE"
 XSOCK=/tmp/.X11-unix
 XAUTH=$HOME/.Xauthority
 
-SHARED_DOCKER_DIR=/root/shared_dir/carla_15
-SHARED_HOST_DIR=$HOME/misys/carla/carla_15
+SHARED_DOCKER_DIR=/root/shared_dir/BBD-AD
+SHARED_HOST_DIR=$HOME/misys/BBD-AD
 
 #mkdir -p $SHARED_HOST_DIR
 

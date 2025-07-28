@@ -2,3 +2,8 @@
 	path = B2D_tcp_uniad/ros-carla-msgs
 	url = https://github.com/carla-simulator/ros-carla-msgs.git
 	branch = leaderboard-2.0
+
+[submodule "carla_ros_bridge/src"]
+	path = carla_ros_bridge/src
+	url = https://github.com/ttgamage/carla-ros-bridge.git
+
