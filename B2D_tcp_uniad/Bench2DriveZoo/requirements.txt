@@ -29,7 +29,7 @@ einops
 casadi
 torchmetrics
 motmetrics==1.1.3 # Fixed
-#trimesh
+#trimesh #jw
 # pytest related
 pytest
 pytest-cov
