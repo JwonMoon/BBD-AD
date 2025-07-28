@@ -6,7 +6,7 @@
 */Bench2DriveZoo/.git
 */Bench2DriveZoo/.gitignore
 */Bench2DriveZoo/build
-*/Bench2DriveZoo/mmcv.egg-info
+*.egg-info/
 */Bench2Drive/eval_v1
 */Bench2Drive/.git
 */Bench2Drive/.gitignore
