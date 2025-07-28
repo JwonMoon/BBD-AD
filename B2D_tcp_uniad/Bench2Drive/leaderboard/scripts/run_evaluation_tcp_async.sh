@@ -48,7 +48,7 @@ export TICK_HZ=${13} #jw
 # echo "DEBUG_MODE=$DEBUG_MODE"
 # echo "TICK_HZ=$TICK_HZ"
 
-CUDA_VISIBLE_DEVICES=${GPU_RANK} python ${LEADERBOARD_ROOT}/leaderboard/leaderboard_evaluator_async.py \
+CUDA_VISIBLE_DEVICES=${GPU_RANK} python ${LEADERBOARD_ROOT}/leaderboard/leaderboard_evaluator_tcp_async.py \
 --routes=${ROUTES} \
 --repetitions=${REPETITIONS} \
 --track=${CHALLENGE_TRACK_CODENAME} \
