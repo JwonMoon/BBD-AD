@@ -6,8 +6,8 @@
         <transport_id>udp_transport</transport_id>
         <type>UDPv4</type>
         <interfaceWhiteList>
-  	    <address>192.168.10.2</address>
-	    <address>192.168.20.1</address>
+  	    <address>192.168.10.2</address> <!-- desktop RECV -->
+	      <address>192.168.20.1</address> <!-- orin2 RECV -->
     	</interfaceWhiteList>
         <sendBufferSize>8388608</sendBufferSize>         <!-- 1MB -->
         <receiveBufferSize>8388608</receiveBufferSize>   <!-- 1MB -->
@@ -22,10 +22,10 @@
           <transport_id>udp_transport</transport_id>
         </userTransports>
         <builtin>
-          <avoid_builtin_multicast>true</avoid_builtin_multicast> <!-- 🔒 멀티캐스트 비활성화 -->
+          <avoid_builtin_multicast>true</avoid_builtin_multicast>  <!--Disable Multicast -->
                 <metatrafficUnicastLocatorList>
-          <locator address="192.168.10.1" port="7400"/>
-          <locator address="192.168.20.2" port="7400"/>
+          <locator address="192.168.10.1" port="7400"/> <!-- desktop SEND -->
+          <locator address="192.168.20.2" port="7400"/> <!-- orin2 SEND -->
                 </metatrafficUnicastLocatorList>
                 <metatrafficMulticastLocatorList>
                   <locator address="0.0.0.0" port="7401"/>

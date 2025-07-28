@@ -102,7 +102,8 @@ class RoutePlanner(object):
 				to_pop = i
 
 			r = 255 * int(distance > self.min_distance)
-			g = 255 * int(self.route[i][1].value == 4)
+			# g = 255 * int(self.route[i][1].value == 4)
+			g = 255 * int(self.route[i][1] == 4) #jw
 			b = 255
 			self.debug.dot(gps, self.route[i][0], (r, g, b))
 

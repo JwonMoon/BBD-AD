@@ -19,18 +19,13 @@ XAUTH=$HOME/.Xauthority
 
 SHARED_DOCKER_DIR=/root/shared_dir
 SHARED_DOCKER_DIR_B2D=$SHARED_DOCKER_DIR/B2D_Demo
-SHARED_HOST_DIR_B2D=$HOME/ssd_ws/B2D_Demo
-SHARED_DOCKER_DIR_TF=$SHARED_DOCKER_DIR/transfuser
-SHARED_HOST_DIR_TF=$HOME/ssd_ws/transfuser
-#SHARED_DOCKER_CARLA_DIR=/root/shared_dir/carla
-#SHARED_HOST_CARLA_DIR=$HOME/orin/ssd_ws/carla/
 
+SHARED_HOST_DIR_B2D=$HOME/ssd_ws/B2D_Demo
 
 #mkdir -p $SHARED_HOST_DIR
 
 VOLUMES="--volume=$XSOCK:$XSOCK:rw
         --volume=$XAUTH:$XAUTH:rw
-        --volume=$SHARED_HOST_DIR_TF:$SHARED_DOCKER_DIR_TF:rw
         --volume=$SHARED_HOST_DIR_B2D:$SHARED_DOCKER_DIR_B2D:rw"
 
 xhost +local:docker

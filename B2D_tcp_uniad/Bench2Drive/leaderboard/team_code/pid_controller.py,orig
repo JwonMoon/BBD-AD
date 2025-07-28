@@ -92,8 +92,7 @@ class PIDController(object):
         throttle = throttle if not brake else 0.0
 
         metadata = {
-            # 'speed': float(speed.astype(np.float64)),
-            'speed': float(speed), #jw
+            'speed': float(speed.astype(np.float64)),
             'steer': float(steer),
             'throttle': float(throttle),
             'brake': float(brake),

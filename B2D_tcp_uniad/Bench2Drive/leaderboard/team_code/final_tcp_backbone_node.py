@@ -26,7 +26,7 @@ from rclpy.qos import QoSProfile, DurabilityPolicy, QoSReliabilityPolicy
 from sensor_msgs.msg import Image, NavSatFix, Imu, CompressedImage
 from carla_msgs.msg import CarlaEgoVehicleControl, CarlaRoute, CarlaEgoVehicleStatus, CarlaGnssRoute
 from tf_transformations import euler_from_quaternion
-from tcp_msgs.msg import TCPBackboneOutput, TickTrigger
+from bbd_msgs.msg import BBDBackboneOutput, TickTrigger
 import csv
 import threading, queue
 import socket
@@ -77,15 +77,12 @@ class TCPBackboneNode(Node):
         self.gps = [0.0, 0.0]
         self.imu = 0.0
         self.speed = 0.0
-        self._global_plan = None
         self._global_plan_gps = None
 
         self.gps_received = False
         self.imu_received = False
         self.speed_received = False
-        self.global_plan_received = False
         self.global_plan_gps_received = False
-        # self._is_ready = False
         
         # self.pid_metadata = {} 
         
@@ -106,9 +103,9 @@ class TCPBackboneNode(Node):
             self.create_subscription(Image, '/carla/hero/CAM_FRONT_LEFT/image', self.image_front_left_callback, best_effort_qos)
             self.create_subscription(Image, '/carla/hero/CAM_FRONT_RIGHT/image', self.image_front_right_callback, best_effort_qos)
         elif self.img_input == 'compressed':
-            self.create_subscription(CompressedImage, '/image/compressed', self.compressed_image_front_callback, best_effort_qos)
-            self.create_subscription(CompressedImage, '/image_left/compressed', self.compressed_image_front_left_callback, best_effort_qos)
-            self.create_subscription(CompressedImage, '/image_right/compressed', self.compressed_image_front_right_callback, best_effort_qos)
+            self.create_subscription(CompressedImage, '/image_front/compressed', self.compressed_image_front_callback, 1)
+            self.create_subscription(CompressedImage, '/image_front_left/compressed', self.compressed_image_front_left_callback, 1)
+            self.create_subscription(CompressedImage, '/image_front_right/compressed', self.compressed_image_front_right_callback, 1)
         else:
             print("img_input type is wrong !")
 
@@ -116,13 +113,12 @@ class TCPBackboneNode(Node):
         self.create_subscription(Imu, '/carla/hero/IMU', self.imu_callback, best_effort_qos)
         self.create_subscription(CarlaEgoVehicleStatus, '/carla/hero/vehicle_status', self.vehicle_status_callback, best_effort_qos)
         self.create_subscription(CarlaGnssRoute, '/carla/hero/global_plan_gps', self.global_plan_gps_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
-        # self.create_subscription(CarlaRoute, '/carla/hero/global_plan', self.global_plan_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         
-        # self.backbone_publisher = self.create_publisher(TCPBackboneOutput, '/tcp/backbone_output', QoSProfile(depth=1))
-        self.backbone_publisher = self.create_publisher(TCPBackboneOutput, '/tcp/backbone_output', best_effort_qos)
+        # self.backbone_publisher = self.create_publisher(BBDBackboneOutput, '/tcp/backbone_output', QoSProfile(depth=1))
+        self.backbone_publisher = self.create_publisher(BBDBackboneOutput, '/tcp/backbone_output', best_effort_qos)
 
         # [추가] TCP 소켓 연결 (Orin2로 연결)
-        self.tcp_ip = "localhost"  # Orin2
+        self.tcp_ip = "192.168.20.2"  # Orin2
         self.tcp_port = 9999          # 포트는 맞춰서 사용
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 65536)  # 송신 버퍼 크기 64KB
@@ -310,27 +306,6 @@ class TCPBackboneNode(Node):
         self.try_process_step()
         # self.get_logger().info(f"[vehicle_status_callback] finished, step {self.step},  speed={self.speed}") #debug
 
-    # def global_plan_callback(self, msg):
-    #     # self.get_logger().info(f"[global_plan_callback] poses={len(msg.poses)}, road_options={len(msg.road_options)}")
-    #     self._global_plan = []
-    #     for pose, road_option in zip(msg.poses, msg.road_options):
-    #         self._global_plan.append(({
-    #             'location': {
-    #                 'x': pose.position.x,
-    #                 'y': pose.position.y,
-    #                 'z': pose.position.z
-    #             }
-    #         }, road_option))
-
-    #     if not self.global_plan_received:
-    #         self.global_plan_received = True
-
-    #     if not self.initialized:
-    #         self._init()
-    #     # print(f"World plan road_options: {[opt for _, opt in self._global_plan]}")
-    #     # print(f"[DEBUG] First global_plan_world_coord point: x={self._global_plan[0][0]['location']['x']}, y={self._global_plan[0][0]['location']['y']}")
-    #     self.try_process_step()
-
     def global_plan_gps_callback(self, msg):
         # self.get_logger().info(f"[global_plan_gps_callback] coordinates={len(msg.coordinates)}, road_options={len(msg.road_options)}")
         self._global_plan_gps = []
@@ -354,7 +329,6 @@ class TCPBackboneNode(Node):
         self.try_process_step()
 
     def _init(self):  
-        # if self.global_plan_received is False or self.global_plan_gps_received is False:
         if self.global_plan_gps_received is False:
             return
 
@@ -412,8 +386,6 @@ class TCPBackboneNode(Node):
                 #     print(f"imu_received = {self.imu_received}")
                 # if not self.speed_received:
                 #     print(f"speed_received = {self.speed_received}")
-                # if not self.global_plan_received:
-                #     print(f"global_plan_received = {self.global_plan_received}")
                 # if not self.global_plan_gps_received:
                 #     print(f"global_plan_gps_received = {self.global_plan_gps_received}")
                 # print("-----------------------------------------------")

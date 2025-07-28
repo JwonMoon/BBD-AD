@@ -15,7 +15,7 @@ import select  # 비블로킹 모드를 위해 추가
 import msgpack
 import rclpy
 from rclpy.node import Node
-from tcp_msgs.msg import TCPBranchOutput  
+from bbd_msgs.msg import BBDBranchOutput  
 from rclpy.qos import QoSProfile
 
 SAVE_PATH = os.environ.get('SAVE_PATH', None)
@@ -50,7 +50,7 @@ def start_branch_server(ckpt_path, debug_mode, port_recv=9999):
     rclpy.init()
     node = Node("tcp_branch_node")
 
-    control_pub = node.create_publisher(TCPBranchOutput, '/tcp/vehicle_control_cmd', QoSProfile(depth=1))
+    control_pub = node.create_publisher(BBDBranchOutput, '/tcp/vehicle_control_cmd', QoSProfile(depth=1))
 
     debug_mode = int(debug_mode)
 
@@ -224,7 +224,7 @@ def start_branch_server(ckpt_path, debug_mode, port_recv=9999):
 
             # payload = msgpack.packb(control, use_bin_type=True)  # MessagePack 직렬화
             # [ROS2 Publish]
-            msg = TCPBranchOutput()
+            msg = BBDBranchOutput()
             msg.step = step
             msg.steer = control_steer
             msg.throttle = control_throttle

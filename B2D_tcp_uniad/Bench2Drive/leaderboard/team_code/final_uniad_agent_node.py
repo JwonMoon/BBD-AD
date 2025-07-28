@@ -16,9 +16,9 @@ from torchvision import transforms as T
 from scipy.optimize import fsolve
 
 #uniad
-from team_code.pid_controller import PIDController #jw
+from pid_controller import PIDController #jw
 # from Bench2DriveZoo.team_code.pid_controller import PIDController
-from team_code.planner import RoutePlanner #jw
+from planner import RoutePlanner #jw
 # from Bench2DriveZoo.team_code.planner import RoutePlanner
 # from leaderboard.autoagents import autonomous_agent
 from mmcv import Config
@@ -44,19 +44,18 @@ PLANNER_TYPE = os.environ.get('PLANNER_TYPE', None)
 
 EARTH_RADIUS_EQUA = 6378137.0
 
-class UniadAgentNode(Node):
+class UniADAgentNode(Node):
     #jw) setup() -> __init__()
-    def __init__(self, config_ckpt_path, save_path, debug_mode, img_input, img_k):
+    def __init__(self, config_ckpt_path, save_path, debug_mode, img_input):
         super().__init__('uniad_agent_node')
 
         #uniad
         self.pidcontroller = PIDController() 
         self.config_path = config_ckpt_path.split('+')[0]
         self.ckpt_path = config_ckpt_path.split('+')[1]
-        # self.save_path = save_path if save_path else '/tmp/tcp_agent'
+        # self.save_path = save_path if save_path else '/tmp/uniad_agent'
         self.debug_mode = debug_mode
         self.img_input = img_input if img_input else 'raw'
-        self.img_k = float(img_k) if img_k else 1.0
         self.step = 0
         self.initialized = False
         self.try_proc_num = 0
@@ -78,7 +77,7 @@ class UniadAgentNode(Node):
                     print(_module_path)
                     plg_lib = importlib.import_module(_module_path) 
                     
-        self.model = build_model(cfg.model, train_cfg=cfg.get('train_cfg'), test_cfg=cfg.get('test_cfg'))
+        self.model = build_model(cfg.model, train_cfg=cfg.get('train_cfg'), test_cfg=cfg.get('test_cfg')) #jw) partitioning: base_e2e 안에 model 변경하기
         checkpoint = load_checkpoint(self.model, self.ckpt_path, map_location='cpu', strict=True)
         
         self.model.cuda()
@@ -103,7 +102,7 @@ class UniadAgentNode(Node):
         # self.lat_ref, lon_ref = 0.0 #tcp
         self._route_planner = None
 
-        control = carla.VehicleControl()
+        control = BBDBranchOutput()
         control.steer = 0.0
         control.throttle = 0.0
         control.brake = 0.0	
@@ -194,10 +193,9 @@ class UniadAgentNode(Node):
         self.gps_received = False
         self.imu_received = False
         self.speed_received = False
-        self.global_plan_received = False
         self.global_plan_gps_received = False
         
-        self.pid_metadata = {} 
+        # self.pid_metadata = {} 
         
         if self.img_input == 'raw':
             self.create_subscription(Image, '/carla/hero/CAM_FRONT/image', self.image_front_callback, 1)
@@ -220,7 +218,6 @@ class UniadAgentNode(Node):
         self.create_subscription(Imu, '/carla/hero/IMU', self.imu_callback, 1)
         self.create_subscription(CarlaEgoVehicleStatus, '/carla/hero/vehicle_status', self.vehicle_status_callback, 1)
         self.create_subscription(CarlaGnssRoute, '/carla/hero/global_plan_gps', self.global_plan_gps_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
-        # self.create_subscription(CarlaRoute, '/carla/hero/global_plan', self.global_plan_callback, QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
 
         self.control_pub = self.create_publisher(BBDBranchOutput, '/uniad/vehicle_control_cmd', QoSProfile(depth=1))
 
@@ -230,8 +227,8 @@ class UniadAgentNode(Node):
             self.save_path = pathlib.Path(SAVE_PATH) / string
             self.save_path.mkdir(parents=True, exist_ok=True)
 
-            (self.save_path / 'meta').mkdir()
-            self.log_file = self.save_path / 'tcp_timing.csv'
+            # (self.save_path / 'meta').mkdir()
+            self.log_file = self.save_path / 'uniad_timing.csv'
             with open(self.log_file, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
@@ -376,18 +373,18 @@ class UniadAgentNode(Node):
         yaw = (np.pi / 2 - yaw) % (2 * np.pi) #jw) ENU to NED
 
         self.compass = yaw  # yaw in radians
-        self.acceleration = msg.linear_acceleration
-        # self.acceleration = np.array([
-        #     msg.linear_acceleration.x,
-        #     msg.linear_acceleration.y,
-        #     msg.linear_acceleration.z
-        # ], dtype=np.float32)
-        self.angular_velocity = msg.angular_velocity
-        # self.angular_velocity = np.array([
-        #     msg.angular_velocity.x,
-        #     msg.angular_velocity.y,
-        #     msg.angular_velocity.z
-        # ], dtype=np.float32)
+        # self.acceleration = msg.linear_acceleration
+        self.acceleration = np.array([
+            msg.linear_acceleration.x,
+            msg.linear_acceleration.y,
+            msg.linear_acceleration.z
+        ], dtype=np.float32)
+        # self.angular_velocity = msg.angular_velocity
+        self.angular_velocity = np.array([
+            msg.angular_velocity.x,
+            msg.angular_velocity.y,
+            msg.angular_velocity.z
+        ], dtype=np.float32)
         self.imu_received = True
         self.try_process_step()
         # self.get_logger().info(f"[imu_callback] finished, step {self.step}, compass={self.compass}") #debug
@@ -398,27 +395,6 @@ class UniadAgentNode(Node):
         self.speed_received = True
         self.try_process_step()
         # self.get_logger().info(f"[vehicle_status_callback] finished, step {self.step},  speed={self.speed}") #debug
-
-    # def global_plan_callback(self, msg):
-    #     # self.get_logger().info(f"[global_plan_callback] poses={len(msg.poses)}, road_options={len(msg.road_options)}")
-    #     self._global_plan = []
-    #     for pose, road_option in zip(msg.poses, msg.road_options):
-    #         self._global_plan.append(({
-    #             'location': {
-    #                 'x': pose.position.x,
-    #                 'y': pose.position.y,
-    #                 'z': pose.position.z
-    #             }
-    #         }, road_option))
-
-    #     if not self.global_plan_received:
-    #         self.global_plan_received = True
-
-    #     if not self.initialized:
-    #         self._init()
-    #     # print(f"World plan road_options: {[opt for _, opt in self._global_plan]}")
-    #     # print(f"[DEBUG] First global_plan_world_coord point: x={self._global_plan[0][0]['location']['x']}, y={self._global_plan[0][0]['location']['y']}")
-    #     self.try_process_step()
 
     def global_plan_gps_callback(self, msg):
         # self.get_logger().info(f"[global_plan_gps_callback] coordinates={len(msg.coordinates)}, road_options={len(msg.road_options)}")
@@ -443,7 +419,6 @@ class UniadAgentNode(Node):
         self.try_process_step()
 
     def _init(self):
-        # if self.global_plan_received is False or self.global_plan_gps_received is False:
         if self.global_plan_gps_received is False:
             return
 
@@ -470,7 +445,7 @@ class UniadAgentNode(Node):
         self.initialized = True
 
     def try_process_step(self):
-        if self.initialized and self.rgb_front is not None and self.rgb_front_left is not None and self.rgb_front_right is not None \
+        if self.initialized and self.rgb_front is not None and self.rgb_front_left is not None and self.rgb_front_right is not None and \
            self.rgb_back is not None and self.rgb_back_left is not None and self.rgb_back_right is not None and self.gps_received and self.imu_received and self.speed_received:
             # print(f"let's try process_step(), step {self.step}")
             self.process_step()
@@ -488,49 +463,50 @@ class UniadAgentNode(Node):
             self.try_proc_num = 0
         else:
             self.try_proc_num += 1
-            # if self.debug_mode > 1:
-            #     print("-----------------------------------------------")
-            #     print("too early to do process_step()")
-            #     if not self.initialized:
-            #         print(f"initialized = {self.initialized}")
-            #     if self.rgb_front is None:
-            #         print(f"rgb_front = {self.rgb_front is not None}")
-            #     if self.rgb_front_left is None:
-            #         print(f"rgb_front_left = {self.rgb_front_left is not None}")
-            #     if self.rgb_front_right is None:
-            #         print(f"rgb_front_right = {self.rgb_front_right is not None}")
-            #     if self.rgb_back is None:
-            #         print(f"rgb_back = {self.rgb_back is not None}")
-            #     if self.rgb_back_left is None:
-            #         print(f"rgb_back_left = {self.rgb_back_left is not None}")
-            #     if self.rgb_back_right is None:
-            #         print(f"rgb_back_right = {self.rgb_back_right is not None}")
-            #     if not self.gps_received:
-            #         print(f"gps_received = {self.gps_received}")
-            #     if not self.imu_received:
-            #         print(f"imu_received = {self.imu_received}")
-            #     if not self.speed_received:
-            #         print(f"speed_received = {self.speed_received}")
-            #     if not self.global_plan_received:
-            #         print(f"global_plan_received = {self.global_plan_received}")
-            #     if not self.global_plan_gps_received:
-            #         print(f"global_plan_gps_received = {self.global_plan_gps_received}")
-            #     print("-----------------------------------------------")
+            if self.debug_mode > 1:
+                print("-----------------------------------------------")
+                print("too early to do process_step()")
+                if not self.initialized:
+                    print(f"initialized = {self.initialized}")
+                if self.rgb_front is None:
+                    print(f"rgb_front = {self.rgb_front is not None}")
+                if self.rgb_front_left is None:
+                    print(f"rgb_front_left = {self.rgb_front_left is not None}")
+                if self.rgb_front_right is None:
+                    print(f"rgb_front_right = {self.rgb_front_right is not None}")
+                if self.rgb_back is None:
+                    print(f"rgb_back = {self.rgb_back is not None}")
+                if self.rgb_back_left is None:
+                    print(f"rgb_back_left = {self.rgb_back_left is not None}")
+                if self.rgb_back_right is None:
+                    print(f"rgb_back_right = {self.rgb_back_right is not None}")
+                if not self.gps_received:
+                    print(f"gps_received = {self.gps_received}")
+                if not self.imu_received:
+                    print(f"imu_received = {self.imu_received}")
+                if not self.speed_received:
+                    print(f"speed_received = {self.speed_received}")
+                if not self.global_plan_gps_received:
+                    print(f"global_plan_gps_received = {self.global_plan_gps_received}")
+                print("-----------------------------------------------")
 
     def tick(self):
         self.step += 1
         
         if self.debug_mode > 1:
-            self.get_logger().info(f"[TCPBackboneNode] Tick called, GPS={self.gps}, step={self.step}") #debug
+            self.get_logger().info(f"[UniADBackboneNode] Tick called, GPS={self.gps}, step={self.step}") #debug
         if not all([self.rgb_front is not None, self.rgb_front_left is not None, self.rgb_front_right is not None, self.rgb_back is not None, self.rgb_back_left is not None, self.rgb_back_right is not None, self.initialized]):
             self.get_logger().warning(f"- tick(): No rgb_front or not initialized at step {self.step}")
             return None
 
-        imgs=[self.rgb_front, self.rgb_front_left, self.rgb_front_right, self.rgb_back, self.rgb_back_left, self.rgb_back_right]
+        img_data = [self.rgb_front, self.rgb_front_left, self.rgb_front_right, self.rgb_back, self.rgb_back_left, self.rgb_back_right]
+        cams = ['CAM_FRONT', 'CAM_FRONT_LEFT', 'CAM_FRONT_RIGHT', 'CAM_BACK', 'CAM_BACK_LEFT', 'CAM_BACK_RIGHT']
+        imgs = dict(zip(cams, img_data))
+
 		# bev = cv2.cvtColor(input_data['bev'][1][:, :, :3], cv2.COLOR_BGR2RGB)
         gps = self.gps_to_location(self.gps)
         # print(f"[DEBUG] Agent GPS to local: x={gps[0]}, y={gps[1]}")
-        speed = self.speed_branch
+        speed = self.speed
         compass = self.compass
         acceleration = self.acceleration
         angular_velocity = self.angular_velocity
@@ -541,7 +517,7 @@ class UniadAgentNode(Node):
         result = {
             'imgs': imgs,
             'gps': gps,
-            'pos':pos,
+            # 'pos':pos,
             'speed': speed,
             'compass': compass,
             # 'bev': bev,
@@ -564,13 +540,6 @@ class UniadAgentNode(Node):
         # T_t_start = time.time()
         tick_data = self.tick()
         # T_t_end = time.time()
-
-        if tick_data is None or self.step < self.config.seq_len:
-            self.get_logger().warning(f"- process_step(): No tick data or step < seq_len at step {self.step}, retutn control 0")
-            rgb = self._im_transform(tick_data['rgb']).unsqueeze(0)
-            control = BBDBranchOutput()
-            self.control_pub.publish(control)
-            return
 
         # STEP 2: vehicle status organizing
         results = {}
@@ -595,8 +564,8 @@ class UniadAgentNode(Node):
         rotation = list(Quaternion(axis=[0, 0, 1], radians=ego_theta))
 
         can_bus = np.zeros(18)
-        can_bus[0] = tick_data['pos'][0]
-        can_bus[1] = -tick_data['pos'][1]
+        # can_bus[0] = tick_data['pos'][0]
+        # can_bus[1] = -tick_data['pos'][1]
         can_bus[3:7] = rotation
         can_bus[7] = tick_data['speed']
         can_bus[10:13] = tick_data['acceleration']
@@ -671,10 +640,10 @@ class UniadAgentNode(Node):
         # self.pid_metadata['throttle_traj'] = float(throttle_traj)
         # self.pid_metadata['brake_traj'] = float(brake_traj)
         # self.pid_metadata['plan'] = out_truck.tolist()
-        metric_info = self.get_metric_info()
-        self.metric_info[self.step] = metric_info
-        if SAVE_PATH is not None and self.step % 1 == 0:
-            self.save(tick_data)
+        # metric_info = self.get_metric_info()
+        # self.metric_info[self.step] = metric_info
+        # if SAVE_PATH is not None and self.step % 1 == 0:
+        #     self.save(tick_data)
         self.prev_control = control
         control.step = self.step
 
@@ -744,13 +713,13 @@ class UniadAgentNode(Node):
             
             # if self.debug_mode > 1: 
             #     T_log_end = time.time()
-            #     self.get_logger().warning(f"[TCPAgentNode] Process step finished, step={self.step}")
+            #     self.get_logger().warning(f"[UniADAgentNode] Process step finished, step={self.step}")
 
     def save(self, tick_data):
         frame = self.step
         PILImage.fromarray(tick_data['rgb_front']).save(self.save_path / 'rgb_front' / (f'%04d.png' % frame))
-        with open(self.save_path / 'meta' / (f'%04d.json' % frame), 'w') as outfile:
-            json.dump(self.pid_metadata, outfile, indent=4)
+        # with open(self.save_path / 'meta' / (f'%04d.json' % frame), 'w') as outfile:
+        #     json.dump(self.pid_metadata, outfile, indent=4)
 
     def gps_to_location(self, gps):
         lat, lon = gps
@@ -762,26 +731,25 @@ class UniadAgentNode(Node):
         return np.array([x, y])
 
     def destroy(self):
-        del self.net
+        del self.model
         torch.cuda.empty_cache()
-        self.get_logger().info("TCP Agent Node destroyed")
+        self.get_logger().info("UniAD Agent Node destroyed")
         
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description='TCP Agent Node for CARLA')
+    parser = argparse.ArgumentParser(description='UniAD Agent Node for CARLA')
     parser.add_argument('--config-ckpt-path', required=True, help='Path to model config and checkpoint')
     parser.add_argument('--save-path', default=None, help='Path to save debug outputs')
     parser.add_argument('--debug-mode', type=int, default=0, help='Level of debug mode')
     parser.add_argument('--img-input', default='raw', help='Type for input camera image')
-    parser.add_argument('--img-k', type=float, default=1.0, help='Input camera image resolution ratio')
     args = parser.parse_args()
 
     rclpy.init()
-    node = TCPAgentNode(args.config_ckpt_path, args.save_path, args.debug_mode, args.img_input, args.img_k)
+    node = UniADAgentNode(args.config_ckpt_path, args.save_path, args.debug_mode, args.img_input)
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        node.get_logger().info("Shutting down TCP Agent Node")
+        node.get_logger().info("Shutting down UniAD Agent Node")
     finally:
         node.destroy()
         rclpy.shutdown()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from tcp_msgs.msg import TCPBranchOutput
+from bbd_msgs.msg import BBDBranchOutput
 import socket
 import json
 import threading
@@ -18,7 +18,7 @@ DEBUG_MODE = 1
 class TCPControlRelay(Node):
     def __init__(self, port=9998):
         super().__init__('tcp_control_relay')
-        self.control_pub = self.create_publisher(TCPBranchOutput, '/tcp/vehicle_control_cmd', QoSProfile(depth=1))
+        self.control_pub = self.create_publisher(BBDBranchOutput, '/tcp/vehicle_control_cmd', QoSProfile(depth=1))
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind(('0.0.0.0', port))
@@ -69,7 +69,7 @@ class TCPControlRelay(Node):
                 # msg_dict = json.loads(data.decode('utf-8'))
                 msg_dict = msgpack.unpackb(data, raw=False)  # msgpack 역직렬화
 
-                msg = TCPBranchOutput()
+                msg = BBDBranchOutput()
                 msg.step = msg_dict['step']
                 msg.steer = float(msg_dict['steer'])
                 msg.throttle = float(msg_dict['throttle'])
