@@ -6,7 +6,6 @@
 */Bench2DriveZoo/.git
 */Bench2DriveZoo/.gitignore
 */Bench2DriveZoo/build
-*/Bench2DriveZoo/mmcv*
 */Bench2DriveZoo/mmcv.egg-info
 */Bench2Drive/eval_v1
 */Bench2Drive/.git
@@ -19,6 +18,7 @@ my_ws/
 */log
 *.db3
 *.npy
+*.so
 B2D_tcp_uniad/bbd_msgs/install
 B2D_tcp_uniad/bbd_msgs/build
 B2D_tcp_uniad/bbd_msgs/log
