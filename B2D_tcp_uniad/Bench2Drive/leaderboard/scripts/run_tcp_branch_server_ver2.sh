@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # PYTHONPATH 설정 (TCP 모듈이 import될 수 있도록)
-export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/B2D_Demo/B2D_tcp/Bench2Drive/Bench2DriveZoo)
+export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/BBD-AD/B2D_tcp/Bench2Drive/Bench2DriveZoo)
 
 # 체크포인트 및 저장 경로 설정
 export LEADERBOARD_ROOT=leaderboard

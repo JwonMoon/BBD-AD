@@ -1,12 +1,13 @@
 #!/bin/bash
 
-if [ "$#" != "1" ]; then
-           echo "Usage: $0 [image_tag]"
-           exit 1
-fi
+#if [ "$#" != "1" ]; then
+#           echo "Usage: $0 [image_tag]"
+#           exit 1
+#fi
 
-TAG=$1
-IMAGE=b2d:$TAG
+#TAG=$1
+#IMAGE=bbd:$TAG
+IMAGE=bbd:e2e
 
 RUNTIME="--runtime=nvidia"
 
@@ -17,16 +18,15 @@ echo "Launching $IMAGE"
 XSOCK=/tmp/.X11-unix
 XAUTH=$HOME/.Xauthority
 
-SHARED_DOCKER_DIR=/root/shared_dir
-SHARED_DOCKER_DIR_B2D=$SHARED_DOCKER_DIR/B2D_Demo
-
-SHARED_HOST_DIR_B2D=$HOME/ssd_ws/B2D_Demo
+SHARED_DOCKER_DIR=/root/shared_dir/BBD-AD
+SHARED_HOST_DIR=$HOME/ssd_ws/BBD-AD
 
 #mkdir -p $SHARED_HOST_DIR
 
 VOLUMES="--volume=$XSOCK:$XSOCK:rw
         --volume=$XAUTH:$XAUTH:rw
-        --volume=$SHARED_HOST_DIR_B2D:$SHARED_DOCKER_DIR_B2D:rw"
+        --volume=$SHARED_HOST_DIR:$SHARED_DOCKER_DIR:rw
+	--volume=/dev/shm:/dev/shm"
 
 xhost +local:docker
 
@@ -40,9 +40,6 @@ docker run \
     --privileged \
     --gpus all \
     --net=host \
-    --workdir="$SHARED_DOCKER_DIR_B2D" \
+    --workdir="$SHARED_DOCKER_DIR" \
     $IMAGE
-#--env="DISPLAY=unix${DISPLAY}" \
-# -w /root \
-# --user $USER_ID \
 # $DEVICES

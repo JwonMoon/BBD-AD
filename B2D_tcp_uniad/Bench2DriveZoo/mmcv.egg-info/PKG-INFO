@@ -14,11 +14,14 @@ Classifier: Programming Language :: Python :: 3.9
 Classifier: Topic :: Utilities
 License-File: LICENSE
 Requires-Dist: cython
+Requires-Dist: numba==0.48.0
 Requires-Dist: addict
 Requires-Dist: packaging
 Requires-Dist: Pillow
 Requires-Dist: matplotlib
+Requires-Dist: regex; sys_platform == "win32"
 Requires-Dist: pycocotools; platform_system == "Linux"
+Requires-Dist: pycocotools-windows; platform_system == "Windows"
 Requires-Dist: prettytable
 Requires-Dist: six
 Requires-Dist: terminaltables
@@ -35,6 +38,7 @@ Requires-Dist: networkx
 Requires-Dist: ipython
 Requires-Dist: opencv-python
 Requires-Dist: seaborn
+Requires-Dist: numpy==1.20.0
 Requires-Dist: einops
 Requires-Dist: casadi
 Requires-Dist: torchmetrics

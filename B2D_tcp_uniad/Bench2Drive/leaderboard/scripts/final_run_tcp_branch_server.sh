@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/B2D_Demo/B2D_tcp_uniad/Bench2Drive/Bench2DriveZoo)
+export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/BBD-AD/B2D_tcp_uniad/Bench2Drive/Bench2DriveZoo)
 
 export LEADERBOARD_ROOT=leaderboard
 export CKPT_PATH='./../Bench2DriveZoo/ckpts/tcp_b2d.ckpt'

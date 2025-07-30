@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# export PYTHONPATH=$PYTHONPATH:~/shared_dir/B2D_Demo/B2D_tcp/Bench2Drive/Bench2DriveZoo #jw) TCP import error
+# export PYTHONPATH=$PYTHONPATH:~/shared_dir/BBD-AD/B2D_tcp/Bench2Drive/Bench2DriveZoo #jw) TCP import error
 source /opt/ros/humble/setup.bash
-export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/B2D_Demo/B2D_tcp/Bench2Drive/Bench2DriveZoo)
+export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/BBD-AD/B2D_tcp/Bench2Drive/Bench2DriveZoo)
 
 export CKPT_PATH='./../Bench2DriveZoo/ckpts/tcp_b2d.ckpt'
 # export SAVE_PATH='./eval_v1/'

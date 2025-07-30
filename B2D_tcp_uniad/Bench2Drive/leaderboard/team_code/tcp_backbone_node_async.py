@@ -39,7 +39,7 @@ class TCPBackboneNode(Node):
         super().__init__('tcp_backbone_node')
 
         self.ckpt_path = ckpt_path
-        # self.save_path = save_path if save_path else '/root/shared_dir/B2D_Demo/B2D_tcp/Bench2Drive/eval_v1/'
+        # self.save_path = save_path if save_path else '/root/shared_dir/BBD-AD/B2D_tcp/Bench2Drive/eval_v1/'
         self.debug_mode = debug_mode
         self.img_input = img_input if img_input else 'raw'
         self.img_k = float(img_k) if img_k else 1.0

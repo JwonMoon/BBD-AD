@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source /opt/ros/foxy/setup.bash
-export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/B2D_Demo/B2D_tcp_uniad/Bench2Drive/Bench2DriveZoo)
+export PYTHONPATH=$PYTHONPATH:$(eval echo ~/shared_dir/BBD-AD/B2D_tcp_uniad/Bench2Drive/Bench2DriveZoo)
 
 export CONFIG_CKPT_PATH='./../Bench2DriveZoo/adzoo/uniad/configs/stage2_e2e/base_e2e_b2d.py+./../Bench2DriveZoo/ckpts/uniad_base_b2d.pth'
 # export CONFIG_CKPT_PATH='./../Bench2DriveZoo/adzoo/uniad/configs/stage2_e2e/tiny_e2e_b2d.py+./../Bench2DriveZoo/ckpts/uniad_tiny_b2d.pth'

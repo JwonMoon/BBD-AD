@@ -36,7 +36,7 @@ class TCPBranchNode(Node):
         super().__init__('tcp_branch_node')
 
         self.ckpt_path = ckpt_path
-        # self.save_path = save_path if save_path else '/root/shared_dir/B2D_Demo/B2D_tcp/Bench2Drive/eval_v1/'
+        # self.save_path = save_path if save_path else '/root/shared_dir/BBD-AD/B2D_tcp/Bench2Drive/eval_v1/'
         self.debug_mode = int(debug_mode)
         self.step = 0
 

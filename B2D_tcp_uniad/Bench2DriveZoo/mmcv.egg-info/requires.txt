@@ -1,4 +1,5 @@
 cython
+numba==0.48.0
 addict
 packaging
 Pillow
@@ -19,6 +20,7 @@ networkx
 ipython
 opencv-python
 seaborn
+numpy==1.20.0
 einops
 casadi
 torchmetrics
@@ -42,3 +44,9 @@ dictor
 
 [:platform_system == "Linux"]
 pycocotools
+
+[:platform_system == "Windows"]
+pycocotools-windows
+
+[:sys_platform == "win32"]
+regex
